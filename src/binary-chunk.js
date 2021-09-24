@@ -15,7 +15,14 @@ class Reader {
     this.buffer = buffer;
   }
 
+  checkRange(n) {
+    if (this.buffer.length < n) {
+      throw new Error('Buffer out of bound');
+    }
+  }
+
   readByte() {
+    this.checkRange(1);
     const byte = this.buffer[0];
     this.buffer = this.buffer.slice(1);
     return byte;
@@ -30,6 +37,7 @@ class Reader {
   }
 
   readInt64() {
+    this.checkRange(LUA_INTEGER_SIZE);
     const int64 = new BigInt64Array(
       new Uint8Array(Array.from(this.buffer.slice(0, LUA_INTEGER_SIZE))).buffer,
     )[0];
@@ -38,6 +46,7 @@ class Reader {
   }
 
   readFloat64() {
+    this.checkRange(LUA_NUMBER_SIZE);
     const float64 = new Float64Array(
       new Uint8Array(Array.from(this.buffer.slice(0, LUA_NUMBER_SIZE))).buffer,
     )[0];
@@ -93,9 +102,7 @@ const undump = (buffer) => {
   const reader = new Reader(buffer);
   const error = reader.checkHeader();
   if (error !== '') {
-    // eslint-disable-next-line no-console
-    console.error(`reader.checkeHeader() failed: ${error}`);
-    return false;
+    throw new Error(`reader.checkeHeader() failed: ${error}`);
   }
 
   return true;

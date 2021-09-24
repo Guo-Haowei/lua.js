@@ -11,6 +11,7 @@
         "sourceType": "module"
     },
     "rules": {
-        "import/extensions": ["error", { "js": "always" }] 
+        "import/extensions": ["error", { "js": "always" }],
+        "linebreak-style": 0
     }
 }
