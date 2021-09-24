@@ -10,7 +10,14 @@ const LUA_NUMBER_SIZE = 8;
 const LUAC_INT = 0x5678n;
 const LUAC_NUM = 370.5;
 
-class Reader {
+const TAG_NIL = 0x00;
+const TAG_BOOLEAN = 0x01;
+const TAG_NUMBER = 0x03;
+const TAG_INTEGER = 0x13;
+const TAG_SHORT_STRING = 0x04;
+const TAG_LONG_STRING = 0x14;
+
+class Decoder {
   constructor(buffer) {
     this.buffer = buffer;
   }
@@ -36,22 +43,31 @@ class Reader {
     return str;
   }
 
+  readAny(sizeInByte, func) {
+    this.checkRange(sizeInByte);
+    const ret = func(new Uint8Array(Array.from(this.buffer.slice(0, sizeInByte))).buffer)[0];
+    this.buffer = this.buffer.slice(sizeInByte);
+    return ret;
+  }
+
+  readUint32() {
+    return this.readAny(4, (buffer) => new Uint32Array(buffer));
+  }
+
   readInt64() {
-    this.checkRange(LUA_INTEGER_SIZE);
-    const int64 = new BigInt64Array(
-      new Uint8Array(Array.from(this.buffer.slice(0, LUA_INTEGER_SIZE))).buffer,
-    )[0];
-    this.buffer = this.buffer.slice(LUA_INTEGER_SIZE);
-    return int64;
+    return this.readAny(8, (buffer) => new BigInt64Array(buffer));
   }
 
   readFloat64() {
-    this.checkRange(LUA_NUMBER_SIZE);
-    const float64 = new Float64Array(
-      new Uint8Array(Array.from(this.buffer.slice(0, LUA_NUMBER_SIZE))).buffer,
-    )[0];
-    this.buffer = this.buffer.slice(LUA_NUMBER_SIZE);
-    return float64;
+    return this.readAny(8, (buffer) => new Float64Array(buffer));
+  }
+
+  readString() {
+    const length = this.readByte();
+    if (length === 0) {
+      return '';
+    }
+    return this.readBytes((length === 0xFF ? this.readInt64() : length) - 1);
   }
 
   checkHeader() {
@@ -96,19 +112,127 @@ class Reader {
 
     return '';
   }
+
+  readUint32Array() {
+    const num = this.readUint32();
+    const ret = [];
+    for (let idx = 0; idx < num; idx += 1) {
+      ret.push(this.readUint32());
+    }
+    return ret;
+  }
+
+  readStringArray() {
+    const num = this.readUint32();
+    const ret = [];
+    for (let idx = 0; idx < num; idx += 1) {
+      ret.push(this.readString());
+    }
+    return ret;
+  }
+
+  readConstant() {
+    switch (this.readByte()) {
+      case TAG_NIL: return null;
+      case TAG_BOOLEAN: return this.readByte() !== 0;
+      case TAG_INTEGER: return this.readInt64();
+      case TAG_NUMBER: return this.readFloat64();
+      case TAG_SHORT_STRING: return this.readString();
+      case TAG_LONG_STRING: return this.readString();
+      default: throw new Error('bad type');
+    }
+  }
+
+  readConstants() {
+    const num = this.readUint32();
+    const ret = [];
+    for (let idx = 0; idx < num; idx += 1) {
+      ret.push(this.readConstant());
+    }
+    return ret;
+  }
+
+  readUpvalues() {
+    const num = this.readUint32();
+    const ret = [];
+    for (let idx = 0; idx < num; idx += 1) {
+      const inStack = this.readByte();
+      const index = this.readByte();
+      ret.push({ inStack, index });
+    }
+    return ret;
+  }
+
+  readProto(parentSource) {
+    let source = this.readString();
+    if (source === '') {
+      source = parentSource;
+    }
+    const lineDefined = this.readUint32();
+    const lastLineDefined = this.readUint32();
+    const numParams = this.readByte();
+    const isVararg = this.readByte();
+    const maxStackSize = this.readByte();
+    const code = this.readUint32Array();
+    const constants = this.readConstants();
+    const upvalues = this.readUpvalues();
+    const protos = this.readProtos(source);
+    const lineInfo = this.readUint32Array();
+    const locVars = this.readLocVars();
+    const upvalueNames = this.readStringArray();
+    return {
+      source,
+      lineDefined,
+      lastLineDefined,
+      numParams,
+      isVararg,
+      maxStackSize,
+      code,
+      constants,
+      upvalues,
+      protos,
+      lineInfo,
+      locVars,
+      upvalueNames,
+    };
+  }
+
+  readProtos(parentSource) {
+    const num = this.readUint32();
+    const ret = [];
+    for (let idx = 0; idx < num; idx += 1) {
+      ret.push(this.readProto(parentSource));
+    }
+    return ret;
+  }
+
+  readLocVars() {
+    const num = this.readUint32();
+    const ret = [];
+    for (let idx = 0; idx < num; idx += 1) {
+      const varName = this.readString();
+      const startPC = this.readUint32();
+      const endPC = this.readUint32();
+      ret.push({ varName, startPC, endPC });
+    }
+    return ret;
+  }
 }
 
 const undump = (buffer) => {
-  const reader = new Reader(buffer);
-  const error = reader.checkHeader();
+  const decoder = new Decoder(buffer);
+  const error = decoder.checkHeader();
   if (error !== '') {
     throw new Error(`reader.checkeHeader() failed: ${error}`);
   }
 
-  return true;
+  // skip upvalue for now
+  decoder.readByte();
+
+  return decoder.readProto('');
 };
 
 export {
-  Reader,
+  Decoder,
   undump,
 };
