@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
-import { MAXARG_BX, MAXARG_SBX, Instruction } from '../../src/vm/instruction.js';
+import { MAXARG_BX, MAXARG_SBX, Instruction } from '../src/instruction.js';
 
 describe('instruction.js', () => {
   describe('constants', () => {
@@ -10,7 +10,7 @@ describe('instruction.js', () => {
     });
     it('MAXARG_SBX', () => {
       // eslint-disable-next-line no-bitwise
-      assert.equal(MAXARG_SBX, MAXARG_BX >> 1);
+      assert.equal(MAXARG_SBX, MAXARG_BX >>> 1);
     });
   });
   describe('Instruction', () => {

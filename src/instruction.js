@@ -15,16 +15,16 @@ class Instruction {
 
   iABC() {
     return {
-      a: (this.raw >> 6) & 0xFF,
-      c: (this.raw >> 14) & 0x1FF,
-      b: (this.raw >> 23) & 0x1FF,
+      a: (this.raw >>> 6) & 0xFF,
+      c: (this.raw >>> 14) & 0x1FF,
+      b: (this.raw >>> 23) & 0x1FF,
     };
   }
 
   iABx() {
     return {
-      a: (this.raw >> 6) & 0xFF,
-      bx: (this.raw >> 14),
+      a: (this.raw >>> 6) & 0xFF,
+      bx: (this.raw >>> 14),
     };
   }
 
@@ -37,7 +37,7 @@ class Instruction {
   }
 
   iAx() {
-    return { ax: (this.raw >> 6) };
+    return { ax: (this.raw >>> 6) };
   }
 
   getInfo() {

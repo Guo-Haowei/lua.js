@@ -107,7 +107,7 @@ const opCodeInfos = [
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'NOT'), // R(A) := not R(B)
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'LEN'), // R(A) := length of R(B)
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.R, OpMode.IABC, 'CONCAT'), // R(A) := R(B).. ... ..R(C)
-  new OpCodeInfo(0, 0, OpArgMask.R, OpArgMask.N, OpMode.IAsB, 'JMP'), // pc+=sBx; if (A) close all upvalues >= R(A - 1)
+  new OpCodeInfo(0, 0, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'JMP'), // pc+=sBx; if (A) close all upvalues >= R(A - 1)
   new OpCodeInfo(1, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'EQ'), // if ((RK(B) == RK(C)) ~= A) then pc++
   new OpCodeInfo(1, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'LT'), // if ((RK(B) <  RK(C)) ~= A) then pc++
   new OpCodeInfo(1, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'LE'), // if ((RK(B) <= RK(C)) ~= A) then pc++
@@ -116,10 +116,10 @@ const opCodeInfos = [
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'CALL'), // R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1))
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'TAILCALL'), // return R(A)(R(A+1), ... ,R(A+B-1))
   new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'RETURN'), // return R(A), ... ,R(A+B-2)
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsB, 'FORLOOP'), // R(A)+=R(A+2); if R(A) <?= R(A+1) then { pc+=sBx; R(A+3)=R(A) }
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsB, 'FORPREP'), // R(A)-=R(A+2); pc+=sBx
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'FORLOOP'), // R(A)+=R(A+2); if R(A) <?= R(A+1) then { pc+=sBx; R(A+3)=R(A) }
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'FORPREP'), // R(A)-=R(A+2); pc+=sBx
   new OpCodeInfo(0, 0, OpArgMask.N, OpArgMask.U, OpMode.IABC, 'TFORCALL'), // R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2));
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsB, 'TFORLOOP'), // if R(A+1) ~= nil then { R(A)=R(A+1); pc += sBx }
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'TFORLOOP'), // if R(A+1) ~= nil then { R(A)=R(A+1); pc += sBx }
   new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'SETLIST'), // R(A)[(C-1)*FPF+i] := R(A+i), 1 <= i <= B
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABx, 'CLOSURE'), // R(A) := closure(KPROTO[Bx])
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'VARARG'), // R(A), R(A+1), ..., R(A+B-2) = vararg
