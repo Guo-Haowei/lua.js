@@ -51,13 +51,14 @@ describe('state.js', () => {
     describe('basic arith operations', () => {
       it('should modify state', () => {
         const state3 = new LuaState();
-        state3.pushInteger(1);
-        state3.pushInteger(2);
-        state3.pushInteger(3);
-        state3.pushInteger(4);
-        assert.equal(stateToString(state3), '[1][2][3][4]');
+        [4, 3, 2, 1].forEach((ele) => state3.pushInteger(ele));
+        assert.equal(stateToString(state3), '[4][3][2][1]');
+        state3.arith(lua.LUA_OPSUB);
+        assert.equal(stateToString(state3), '[4][3][1]');
         state3.arith(lua.LUA_OPADD);
-        assert.equal(stateToString(state3), '[1][2][7]');
+        assert.equal(stateToString(state3), '[4][4]');
+        state3.arith(lua.LUA_OPMUL);
+        assert.equal(stateToString(state3), '[16]');
       });
     });
   });

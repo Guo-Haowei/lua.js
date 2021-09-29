@@ -11,20 +11,6 @@ const LUA_TUSERDATA = 7;
 const LUA_TTHREAD = 8;
 /* eslint-enable no-unused-vars */
 
-// const typeOf = (luaValue) => {
-//   if (luaValue === null) {
-//     return LUA_TNIL;
-//   }
-
-//   switch (typeof luaValue) {
-//     case 'string': return LUA_TSTRING;
-//     case 'bigint':
-//     case 'number': return LUA_TNUMBER;
-//     case 'boolean': return LUA_TBOOLEAN;
-//     default: throw new Error('TODO');
-//   }
-// };
-
 export default class LuaStack {
   constructor(n) {
     this.slots = new Array(n);

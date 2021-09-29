@@ -6,6 +6,14 @@ const operators = [
     symbol: '+',
     func: (a, b) => a + b,
   },
+  {
+    symbol: '-',
+    func: (a, b) => a - b,
+  },
+  {
+    symbol: '*',
+    func: (a, b) => a * b,
+  },
 ];
 
 const DEFAULT_STACKSIZE = 20;
