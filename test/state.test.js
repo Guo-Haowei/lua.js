@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import LuaState from '../src/state.js';
+import * as lua from '../src/constants.js';
 
 const stateToString = (state) => {
   let result = '';
@@ -24,7 +25,7 @@ describe('state.js', () => {
         });
       });
     });
-    describe('more tests', () => {
+    describe('basic state operations', () => {
       it('should modify state', () => {
         const state2 = new LuaState();
         state2.pushBoolean(true);
@@ -45,6 +46,18 @@ describe('state.js', () => {
         assert.equal(stateToString(state2), '[true][10][hello][null][null]');
         state2.setTop(-5); // remove last 4
         assert.equal(stateToString(state2), '[true]');
+      });
+    });
+    describe('basic arith operations', () => {
+      it('should modify state', () => {
+        const state3 = new LuaState();
+        state3.pushInteger(1);
+        state3.pushInteger(2);
+        state3.pushInteger(3);
+        state3.pushInteger(4);
+        assert.equal(stateToString(state3), '[1][2][3][4]');
+        state3.arith(lua.LUA_OPADD);
+        assert.equal(stateToString(state3), '[1][2][7]');
       });
     });
   });

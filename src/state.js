@@ -1,4 +1,12 @@
 import LuaStack from './stack.js';
+import * as lua from './constants.js';
+
+const operators = [
+  {
+    symbol: '+',
+    func: (a, b) => a + b,
+  },
+];
 
 const DEFAULT_STACKSIZE = 20;
 
@@ -106,5 +114,20 @@ export default class LuaState {
   pushString(val) {
     LuaState.checkType(val, 'string');
     this.stack.push(val);
+  }
+
+  arith(op) {
+    const b = this.stack.pop();
+    const cond = op !== lua.LUA_OPUNM && op !== lua.LUA_OPBNOT;
+    const a = cond ? this.stack.pop() : b;
+
+    const { symbol, func } = operators[op];
+    const aType = typeof a;
+    const bType = typeof b;
+    if (aType !== 'number' || bType !== 'number') {
+      throw new Error(`Invalid operation: ${a}(${aType}) ${symbol} ${b}(${bType})`);
+    }
+
+    this.stack.push(func(a, b));
   }
 }
