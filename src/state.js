@@ -60,6 +60,21 @@ const operators = [
   },
 ];
 
+const comparators = [
+  {
+    symbol: '==',
+    func: (a, b) => a === b,
+  },
+  {
+    symbol: '<',
+    func: (a, b) => a < b,
+  },
+  {
+    symbol: '<=',
+    func: (a, b) => a <= b,
+  },
+];
+
 const DEFAULT_STACKSIZE = 20;
 
 export default class LuaState {
@@ -177,5 +192,28 @@ export default class LuaState {
     }
 
     this.stack.push(func(a, b));
+  }
+
+  compare(idx1, idx2, op) {
+    const a = this.stack.get(idx1);
+    const b = this.stack.get(idx2);
+
+    const { symbol, func } = comparators[op];
+
+    if (typeof a !== 'number' || typeof b !== 'number') {
+      throw new Error(`invalid comparison: ${a} ${symbol} ${b}`);
+    }
+
+    return func(a, b);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  len() {
+    throw new Error('TODO: implement');
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  concat() {
+    throw new Error('TODO: implement');
   }
 }

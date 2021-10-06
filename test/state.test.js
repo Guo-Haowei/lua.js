@@ -69,6 +69,8 @@ describe('state.js', () => {
         assert.equal(stateToString(state4), '[1][2][3][2]');
         state4.arith(lua.LUA_OPPOW);
         assert.equal(stateToString(state4), '[1][2][9]');
+        assert.equal(state4.compare(3, 2, lua.LUA_OPEQ), false);
+        assert.equal(state4.compare(2, 3, lua.LUA_OPLT), true);
         state4.arith(lua.LUA_OPMOD);
         assert.equal(stateToString(state4), '[1][2]');
         state4.arith(lua.LUA_OPDIV);
