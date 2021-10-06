@@ -14,6 +14,50 @@ const operators = [
     symbol: '*',
     func: (a, b) => a * b,
   },
+  {
+    symbol: '%',
+    func: (a, b) => a % b,
+  },
+  {
+    symbol: '^',
+    func: (a, b) => a ** b,
+  },
+  {
+    symbol: '/',
+    func: (a, b) => a / b,
+  },
+  {
+    symbol: '//',
+    func: (a, b) => Math.floor(a / b),
+  },
+  {
+    symbol: '&',
+    func: () => { throw new Error('TODO: implemented'); },
+  },
+  {
+    symbol: '|',
+    func: () => { throw new Error('TODO: implemented'); },
+  },
+  {
+    symbol: '~',
+    func: () => { throw new Error('TODO: implemented'); },
+  },
+  {
+    symbol: '<<',
+    func: () => { throw new Error('TODO: implemented'); },
+  },
+  {
+    symbol: '>>',
+    func: () => { throw new Error('TODO: implemented'); },
+  },
+  {
+    symbol: '-',
+    func: () => { throw new Error('TODO: implemented'); },
+  },
+  {
+    symbol: '~',
+    func: () => { throw new Error('TODO: implemented'); },
+  },
 ];
 
 const DEFAULT_STACKSIZE = 20;
@@ -113,10 +157,6 @@ export default class LuaState {
   pushNumber(val) {
     LuaState.checkType(val, 'number');
     this.stack.push(val);
-  }
-
-  pushInteger(val) {
-    this.pushNumber(val);
   }
 
   pushString(val) {

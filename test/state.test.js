@@ -30,7 +30,7 @@ describe('state.js', () => {
         const state2 = new LuaState();
         state2.pushBoolean(true);
         assert.equal(stateToString(state2), '[true]');
-        state2.pushInteger(10);
+        state2.pushNumber(10);
         assert.equal(stateToString(state2), '[true][10]');
         state2.pushNil();
         assert.equal(stateToString(state2), '[true][10][null]');
@@ -51,7 +51,7 @@ describe('state.js', () => {
     describe('basic arith operations', () => {
       it('should modify state', () => {
         const state3 = new LuaState();
-        [4, 3, 2, 1].forEach((ele) => state3.pushInteger(ele));
+        [4, 3, 2, 1].forEach((ele) => state3.pushNumber(ele));
         assert.equal(stateToString(state3), '[4][3][2][1]');
         state3.arith(lua.LUA_OPSUB);
         assert.equal(stateToString(state3), '[4][3][1]');
@@ -59,6 +59,20 @@ describe('state.js', () => {
         assert.equal(stateToString(state3), '[4][4]');
         state3.arith(lua.LUA_OPMUL);
         assert.equal(stateToString(state3), '[16]');
+      });
+    });
+    describe('more arith operations', () => {
+      it('should modify state', () => {
+        const state4 = new LuaState();
+        [1, 2, 3, 10.4, 4].forEach((ele) => state4.pushNumber(ele));
+        state4.arith(lua.LUA_OPIDIV);
+        assert.equal(stateToString(state4), '[1][2][3][2]');
+        state4.arith(lua.LUA_OPPOW);
+        assert.equal(stateToString(state4), '[1][2][9]');
+        state4.arith(lua.LUA_OPMOD);
+        assert.equal(stateToString(state4), '[1][2]');
+        state4.arith(lua.LUA_OPDIV);
+        assert.equal(stateToString(state4), '[0.5]');
       });
     });
   });
