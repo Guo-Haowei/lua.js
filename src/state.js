@@ -78,8 +78,10 @@ const comparators = [
 const DEFAULT_STACKSIZE = 20;
 
 export default class LuaState {
-  constructor() {
-    this.stack = new LuaStack(DEFAULT_STACKSIZE);
+  constructor(proto, stackSize) {
+    this.proto = proto || null;
+    this.stack = new LuaStack(stackSize || DEFAULT_STACKSIZE);
+    this.pc = 0;
   }
 
   getTop() {
@@ -215,5 +217,33 @@ export default class LuaState {
   // eslint-disable-next-line class-methods-use-this
   concat() {
     throw new Error('TODO: implement');
+  }
+
+  addPC(n) {
+    this.pc += n;
+  }
+
+  fetch() {
+    const i = this.proto.code[this.pc];
+    this.pc += 1;
+    return i;
+  }
+
+  getConst(idx) {
+    const { constants } = this.proto;
+    if (idx >= constants.length) {
+      throw new Error(`index ${idx} is out of range ${constants}`);
+    }
+    const c = constants[idx];
+    this.stack.push(c);
+  }
+
+  getRK(rk) {
+    if (rk > 0xFF) {
+      // eslint-disable-next-line no-bitwise
+      this.getConst(rk & 0xFF);
+    } else {
+      this.pushValue(rk + 1);
+    }
   }
 }

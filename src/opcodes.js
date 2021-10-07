@@ -1,67 +1,71 @@
+/* eslint-disable no-plusplus */
+let counter = 0;
 const OpMode = {
-  IABC: 0, //  [  B:9  ][  C:9  ][ A:8  ][OP:6]
-  IABx: 1, //  [      Bx:18     ][ A:8  ][OP:6]
-  IAsBx: 2, // [     sBx:18     ][ A:8  ][OP:6]
-  IAx: 3, //   [           Ax:26        ][OP:6]
+  IABC: counter++, //  [  B:9  ][  C:9  ][ A:8  ][OP:6]
+  IABx: counter++, //  [      Bx:18     ][ A:8  ][OP:6]
+  IAsBx: counter++, // [     sBx:18     ][ A:8  ][OP:6]
+  IAx: counter++, //   [           Ax:26        ][OP:6]
 };
 Object.freeze(OpMode);
 
+counter = 0;
 const OpArgMask = {
-  N: 0, // argument is not used
-  U: 1, // argument is used
-  R: 2, // argument is a register or a jump offset
-  K: 3, // argument is a constant or register/constant
+  N: counter++, // argument is not used
+  U: counter++, // argument is used
+  R: counter++, // argument is a register or a jump offset
+  K: counter++, // argument is a constant or register/constant
 };
 Object.freeze(OpArgMask);
 
+counter = 0;
 const OpCode = {
-  MOVE: 0,
-  LOADK: 1,
-  LOADKX: 2,
-  LOADBOOL: 3,
-  LOADNIL: 4,
-  GETUPVAL: 5,
-  GETTABUP: 6,
-  GETTABLE: 7,
-  SETTABUP: 8,
-  SETUPVAL: 9,
-  SETTABLE: 10,
-  NEWTABLE: 11,
-  SELF: 12,
-  ADD: 13,
-  SUB: 14,
-  MUL: 15,
-  MOD: 16,
-  POW: 17,
-  DIV: 18,
-  IDIV: 19,
-  BAND: 20,
-  BOR: 21,
-  BXOR: 22,
-  SHL: 23,
-  SHR: 24,
-  UNM: 25,
-  BNOT: 26,
-  NOT: 27,
-  LEN: 28,
-  CONCAT: 29,
-  JMP: 30,
-  EQ: 31,
-  LT: 32,
-  LE: 33,
-  TEST: 34,
-  TESTSET: 35,
-  CALL: 36,
-  TAILCALL: 37,
-  RETURN: 38,
-  FORLOOP: 39,
-  FORPREP: 40,
-  TFORCALL: 41,
-  TFORLOOP: 42,
-  SETLIST: 43,
-  CLOSURE: 44,
-  VARARG: 45,
-  EXTRAARG: 46,
+  MOVE: counter++,
+  LOADK: counter++,
+  LOADKX: counter++,
+  LOADBOOL: counter++,
+  LOADNIL: counter++,
+  GETUPVAL: counter++,
+  GETTABUP: counter++,
+  GETTABLE: counter++,
+  SETTABUP: counter++,
+  SETUPVAL: counter++,
+  SETTABLE: counter++,
+  NEWTABLE: counter++,
+  SELF: counter++,
+  ADD: counter++,
+  SUB: counter++,
+  MUL: counter++,
+  MOD: counter++,
+  POW: counter++,
+  DIV: counter++,
+  IDIV: counter++,
+  BAND: counter++,
+  BOR: counter++,
+  BXOR: counter++,
+  SHL: counter++,
+  SHR: counter++,
+  UNM: counter++,
+  BNOT: counter++,
+  NOT: counter++,
+  LEN: counter++,
+  CONCAT: counter++,
+  JMP: counter++,
+  EQ: counter++,
+  LT: counter++,
+  LE: counter++,
+  TEST: counter++,
+  TESTSET: counter++,
+  CALL: counter++,
+  TAILCALL: counter++,
+  RETURN: counter++,
+  FORLOOP: counter++,
+  FORPREP: counter++,
+  TFORCALL: counter++,
+  TFORLOOP: counter++,
+  SETLIST: counter++,
+  CLOSURE: counter++,
+  VARARG: counter++,
+  EXTRAARG: counter++,
 };
 Object.freeze(OpCode);
 
