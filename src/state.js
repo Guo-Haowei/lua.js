@@ -1,3 +1,4 @@
+/* eslint-disable no-bitwise */
 import LuaStack from './stack.js';
 import * as lua from './constants.js';
 
@@ -32,31 +33,31 @@ const operators = [
   },
   {
     symbol: '&',
-    func: () => { throw new Error('TODO: implemented'); },
+    func: (a, b) => a & b,
   },
   {
     symbol: '|',
-    func: () => { throw new Error('TODO: implemented'); },
+    func: (a, b) => a | b,
   },
   {
     symbol: '~',
-    func: () => { throw new Error('TODO: implemented'); },
+    func: (a, b) => a ^ b,
   },
   {
     symbol: '<<',
-    func: () => { throw new Error('TODO: implemented'); },
+    func: (a, b) => a << b,
   },
   {
     symbol: '>>',
-    func: () => { throw new Error('TODO: implemented'); },
+    func: (a, b) => a >> b,
   },
   {
     symbol: '-',
-    func: () => { throw new Error('TODO: implemented'); },
+    func: (a) => -a,
   },
   {
     symbol: '~',
-    func: () => { throw new Error('TODO: implemented'); },
+    func: () => { throw new Error('TODO: implemented unary bnot'); },
   },
 ];
 
@@ -245,5 +246,14 @@ export default class LuaState {
     } else {
       this.pushValue(rk + 1);
     }
+  }
+
+  // debug
+  toString() {
+    let result = '';
+    for (let i = 0; i < this.stack.top; i += 1) {
+      result += `[${this.stack.slots[i]}]`;
+    }
+    return result;
   }
 }

@@ -43,6 +43,15 @@ class Instruction {
   getInfo() {
     return opCodeInfos[this.opCode()];
   }
+
+  execute(vm) {
+    const { action, debugName } = this.getInfo();
+    if (!action) {
+      throw new Error(`TODO: implement ${debugName}`);
+    }
+
+    action(this, vm);
+  }
 }
 /* eslint-enable no-bitwise */
 

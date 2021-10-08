@@ -135,7 +135,7 @@ class Decoder {
     switch (this.readByte()) {
       case TAG_NIL: return null;
       case TAG_BOOLEAN: return this.readByte() !== 0;
-      case TAG_INTEGER: return this.readInt64();
+      case TAG_INTEGER: return parseInt(this.readInt64(), 10);
       case TAG_NUMBER: return this.readFloat64();
       case TAG_SHORT_STRING: return this.readString();
       case TAG_LONG_STRING: return this.readString();

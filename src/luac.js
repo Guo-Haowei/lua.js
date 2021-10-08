@@ -2,20 +2,10 @@
 import { readFileSync } from 'fs';
 import { undump } from './binary-chunk.js';
 import { Instruction } from './instruction.js';
-import { OpMode, OpArgMask } from './opcodes.js';
+import { OpMode, OpArgMask, OpCode } from './opcodes.js';
+import LuaState from './state.js';
 
 const APP_NAME = 'luac';
-const HELP_STRING = `luac: no input files given
-usage: luac [options] [filenames]
-Available options are:
-  -l       list (use -l -l for full listing)
-  -o name  output to file 'name' (default is "luac.out")
-  -p       parse only
-  -s       strip debug information
-  -v       show version information
-  --       stop handling options
-  -        stop handling options and process stdin
-`;
 
 const writeInstruction = (ins) => {
   const {
@@ -102,33 +92,44 @@ const listProto = (proto) => {
   protos.forEach((ele) => listProto(ele));
 };
 
-const main = () => {
-  const args = process.argv.slice(2);
-  if (args.length === 0) {
-    process.stdout.write(HELP_STRING);
-    return;
-  }
+const luaMain = (proto, printState) => {
+  const nRegs = proto.maxStackSize;
+  const ls = new LuaState(proto, nRegs + 8);
+  ls.setTop(nRegs);
+  for (;;) {
+    const { pc } = ls;
+    const ins = new Instruction(ls.fetch());
 
-  while (args.length) {
-    const option = args.shift();
-    switch (option) {
-      case '-l': {
-        const fileName = args.shift();
-        if (!fileName) {
-          throw new Error(`${APP_NAME}: expect filename after option '-l'`);
-        }
-        const proto = undump(readFileSync(fileName));
-        listProto(proto);
-        break;
-      }
-      default:
-        throw new Error(`Invalid option '${option}'`);
+    const { debugName } = ins.getInfo();
+
+    if (ins.opCode() === OpCode.RETURN) {
+      break;
+    }
+
+    ins.execute(ls);
+
+    if (printState) {
+      process.stdout.write(`[${pc + 1}] ${debugName} ${ls.toString()}\n`);
     }
   }
+
+  return ls;
 };
 
-try {
-  main();
-} catch (err) {
-  console.error(err);
-}
+const protoFromFile = (fileName) => {
+  if (typeof fileName !== 'string') {
+    throw new Error(`${APP_NAME}: expect filename`);
+  }
+
+  if (fileName.endsWith('.luac')) {
+    return undump(readFileSync(fileName));
+  }
+
+  throw new Error(`Unsupport source ${fileName}`);
+};
+
+export {
+  protoFromFile,
+  luaMain,
+  listProto,
+};
