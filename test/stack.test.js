@@ -7,10 +7,10 @@ describe('stack.js', () => {
     const defaultLen = 2;
     const stack1 = new LuaStack(defaultLen);
     describe(`constructor(${defaultLen})`, () => {
-      it(`should has ${defaultLen} slots filled with null`, () => {
+      it(`should has ${defaultLen} slots filled with undefined`, () => {
         assert.equal(stack1.slots.length, defaultLen);
         stack1.slots.forEach((ele) => {
-          assert.equal(ele, null);
+          assert.equal(ele, undefined);
         });
       });
     });

@@ -25,17 +25,17 @@ describe('state.js', () => {
         state2.pushNumber(10);
         assert.equal(state2.toString(), '[true][10]');
         state2.pushNil();
-        assert.equal(state2.toString(), '[true][10][null]');
+        assert.equal(state2.toString(), '[true][10][nil]');
         state2.pushString('hello');
-        assert.equal(state2.toString(), '[true][10][null][hello]');
+        assert.equal(state2.toString(), '[true][10][nil][hello]');
         state2.pushValue(-4); // push value at -4(true) to top of stack
-        assert.equal(state2.toString(), '[true][10][null][hello][true]');
+        assert.equal(state2.toString(), '[true][10][nil][hello][true]');
         state2.replace(3); // pop top and push to slot 3
         assert.equal(state2.toString(), '[true][10][true][hello]');
         state2.setTop(6); // fill slot 5, 6 with null
-        assert.equal(state2.toString(), '[true][10][true][hello][null][null]');
+        assert.equal(state2.toString(), '[true][10][true][hello][nil][nil]');
         state2.remove(-4); // remove true
-        assert.equal(state2.toString(), '[true][10][hello][null][null]');
+        assert.equal(state2.toString(), '[true][10][hello][nil][nil]');
         state2.setTop(-5); // remove last 4
         assert.equal(state2.toString(), '[true]');
       });

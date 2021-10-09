@@ -14,7 +14,7 @@ const LUA_TTHREAD = 8;
 export default class LuaStack {
   constructor(n) {
     this.slots = new Array(n);
-    this.slots.fill(null);
+    this.slots.fill(undefined);
     this.top = 0;
   }
 
@@ -22,7 +22,7 @@ export default class LuaStack {
   check(n) {
     const free = this.slots.length - this.top;
     for (let idx = free; idx < n; idx += 1) {
-      this.slots.push(null);
+      this.slots.push(undefined);
     }
   }
 
@@ -43,7 +43,7 @@ export default class LuaStack {
     }
     this.top -= 1;
     const ret = this.slots[this.top];
-    this.slots[this.top] = null;
+    this.slots[this.top] = undefined;
     return ret;
   }
 

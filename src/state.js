@@ -1,6 +1,7 @@
 /* eslint-disable no-bitwise */
 import LuaStack from './stack.js';
 import * as lua from './constants.js';
+import { convertToBoolean, convertToNumber, convertToString } from './value.js';
 
 const operators = [
   {
@@ -80,7 +81,7 @@ const DEFAULT_STACKSIZE = 20;
 
 export default class LuaState {
   constructor(proto, stackSize) {
-    this.proto = proto || null;
+    this.proto = proto || undefined;
     this.stack = new LuaStack(stackSize || DEFAULT_STACKSIZE);
     this.pc = 0;
   }
@@ -151,7 +152,7 @@ export default class LuaState {
       }
     } else if (n < 0) {
       for (let i = 0; i > n; i -= 1) {
-        this.stack.push(null);
+        this.stack.push(undefined);
       }
     }
   }
@@ -164,7 +165,7 @@ export default class LuaState {
   }
 
   pushNil() {
-    this.stack.push(null);
+    this.stack.push(undefined);
   }
 
   pushBoolean(val) {
@@ -248,11 +249,27 @@ export default class LuaState {
     }
   }
 
+  toBoolean(idx) {
+    const val = this.stack.get(idx);
+    return convertToBoolean(val);
+  }
+
+  toNumber(idx) {
+    const val = this.stack.get(idx);
+    const [num, ok] = convertToNumber(val);
+
+    if (!ok) {
+      throw new Error(`failed to parse number from <${val}>`);
+    }
+
+    return num;
+  }
+
   // debug
   toString() {
     let result = '';
     for (let i = 0; i < this.stack.top; i += 1) {
-      result += `[${this.stack.slots[i]}]`;
+      result += `[${convertToString(this.stack.slots[i])}]`;
     }
     return result;
   }

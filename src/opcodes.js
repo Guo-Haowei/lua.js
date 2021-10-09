@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 import * as lua from './constants.js';
 
 /* eslint-disable no-plusplus */
@@ -83,12 +84,67 @@ class OpCodeInfo {
   }
 }
 
+const move = (ins, vm) => {
+  let { a, b } = ins.iABC();
+  a += 1;
+  b += 1;
+  vm.copy(b, a);
+};
+
+const jmp = (ins, vm) => {
+  const { a, sbx } = ins.iAsBx();
+  vm.addPC(sbx);
+  if (a !== 0) {
+    throw new Error('TODO!');
+  }
+};
+
+const loadNil = (ins, vm) => {
+  let { a, b } = ins.iABC();
+  a += 1;
+  vm.pushNil();
+  for (let i = a; i <= a + b; i += 1) {
+    vm.copy(-1, i);
+  }
+  vm.pop(1);
+};
+
+const loadBool = (ins, vm) => {
+  let { a, b, c } = ins.iABC();
+  a += 1;
+
+  vm.pushBoolean(b !== 0);
+  vm.replace(a);
+  if (c !== 0) {
+    vm.addPC(1);
+  }
+};
+
+const loadK = (ins, vm) => {
+  let { a, bx } = ins.iABx();
+  a += 1;
+
+  vm.getConst(bx);
+  vm.replace(a);
+};
+
+const loadKx = (ins, vm) => {
+  let { a } = ins.iABx();
+  a += 1;
+  // eslint-disable-next-line no-bitwise
+  const ax = vm.fetch() >>> 6;
+  vm.getConst(ax);
+  vm.replace(a);
+};
+
 const binaryArith = (ins, vm, op) => {
-  const { a, b, c } = ins.iABC();
+  let { a, b, c } = ins.iABC();
+  a += 1;
+
   vm.getRK(b);
   vm.getRK(c);
   vm.arith(op);
-  vm.replace(a + 1);
+  vm.replace(a);
 };
 
 const unaryArith = (ins, vm, op) => {
@@ -101,104 +157,98 @@ const unaryArith = (ins, vm, op) => {
   vm.replace(a);
 };
 
-function move(ins, vm) {
-  let { a, b } = ins.iABC();
-  a += 1;
-  b += 1;
-  vm.copy(b, a);
-}
+const add = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPADD); };
+const sub = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPSUB); };
+const mul = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPMUL); };
+const mod = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPMOD); };
+const pow = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPPOW); };
+const div = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPDIV); };
+const idiv = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPIDIV); };
+const band = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPBAND); };
+const bor = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPBOR); };
+const bxor = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPBXOR); };
+const shl = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPSHL); };
+const shr = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPSHR); };
+const unm = (ins, vm) => { unaryArith(ins, vm, lua.LUA_OPUNM); };
+const bnot = (ins, vm) => { unaryArith(ins, vm, lua.LUA_OPBNOT); };
 
-function jmp(ins, vm) {
-  const { a, sbx } = ins.iAsBx();
-  vm.addPC(sbx);
-  if (a !== 0) {
-    throw new Error('TODO!');
-  }
-}
-
-function loadNil(ins, vm) {
-  const { a, b } = ins.iABC();
-  vm.pushNil();
-  for (let i = a + 1; i <= a + 1 + b; i += 1) {
-    vm.copy(-1, i);
-  }
-  vm.pop(1);
-}
-
-function loadBool(ins, vm) {
+const compare = (ins, vm, op) => {
   const { a, b, c } = ins.iABC();
-  vm.pushBoolean(b !== 0);
-  vm.replace(a + 1);
-  if (c !== 0) {
+  vm.getRK(b);
+  vm.getRK(c);
+  if (vm.compare(-2, -1, op) !== (a !== 0)) {
     vm.addPC(1);
   }
-}
+  vm.pop(2);
+};
 
-function loadK(ins, vm) {
-  const { a, bx } = ins.iABx();
-  vm.getConst(bx);
-  vm.replace(a + 1);
-}
+const eq = (ins, vm) => { compare(ins, vm, lua.LUA_OPEQ); };
+const lt = (ins, vm) => { compare(ins, vm, lua.LUA_OPLT); };
+const le = (ins, vm) => { compare(ins, vm, lua.LUA_OPLE); };
 
-function loadKx(ins, vm) {
-  let { a } = ins.iABx();
-  a += 1;
-  // eslint-disable-next-line no-bitwise
-  const ax = vm.fetch() >>> 6;
-  vm.getConst(ax);
-  vm.replace(a);
-}
-
-function add(ins, vm) { binaryArith(ins, vm, lua.LUA_OPADD); }
-
-function sub(ins, vm) { binaryArith(ins, vm, lua.LUA_OPSUB); }
-
-function mul(ins, vm) { binaryArith(ins, vm, lua.LUA_OPMUL); }
-
-function mod(ins, vm) { binaryArith(ins, vm, lua.LUA_OPMOD); }
-
-function pow(ins, vm) { binaryArith(ins, vm, lua.LUA_OPPOW); }
-
-function div(ins, vm) { binaryArith(ins, vm, lua.LUA_OPDIV); }
-
-function idiv(ins, vm) { binaryArith(ins, vm, lua.LUA_OPIDIV); }
-
-function band(ins, vm) { binaryArith(ins, vm, lua.LUA_OPBAND); }
-
-function bor(ins, vm) { binaryArith(ins, vm, lua.LUA_OPBOR); }
-
-function bxor(ins, vm) { binaryArith(ins, vm, lua.LUA_OPBXOR); }
-
-function shl(ins, vm) { binaryArith(ins, vm, lua.LUA_OPSHL); }
-
-function shr(ins, vm) { binaryArith(ins, vm, lua.LUA_OPSHR); }
-
-function unm(ins, vm) { unaryArith(ins, vm, lua.LUA_OPUNM); }
-
-function bnot(ins, vm) { unaryArith(ins, vm, lua.LUA_OPBNOT); }
-
-function len(ins, vm) {
+const not = (ins, vm) => {
   let { a, b } = ins.iABC();
   a += 1;
   b += 1;
-  vm.len(b);
+  vm.pushBoolean(!vm.toBoolean(b));
   vm.replace(a);
-}
+};
 
-function concat(ins, vm) {
+const testSet = (ins, vm) => {
   let { a, b, c } = ins.iABC();
   a += 1;
   b += 1;
-  c += 1;
 
-  const n = c - b + 1;
-  vm.checkState(n);
-  for (let i = b; i <= c; i += 1) {
-    vm.pushValue(i);
+  if (vm.toBoolean(b) === (c !== 0)) {
+    vm.copy(b, a);
+  } else {
+    vm.addPC(1);
   }
-  vm.concat(n);
+};
+
+const test = (ins, vm) => {
+  let { a, c } = ins.iABC();
+  a += 1;
+
+  if (vm.toBoolean(a) !== (c !== 0)) {
+    vm.addPC(1);
+  }
+};
+
+const forPrep = (ins, vm) => {
+  let { a, sbx } = ins.iAsBx();
+  a += 1;
+
+  // R(A) -= R(A+2)
+  vm.pushValue(a);
+  vm.pushValue(a + 2);
+  vm.arith(lua.LUA_OPSUB);
   vm.replace(a);
-}
+
+  // pc += sbx
+  vm.addPC(sbx);
+};
+
+const forLoop = (ins, vm) => {
+  let { a, sbx } = ins.iAsBx();
+  a += 1;
+
+  // R(A) += R(A+2)
+  vm.pushValue(a + 2);
+  vm.pushValue(a);
+  vm.arith(lua.LUA_OPADD);
+  vm.replace(a);
+
+  // R(A) <?= R(A+1)
+  const isStepPositive = vm.toNumber(a + 2) >= 0;
+  if (
+    (isStepPositive && vm.compare(a, a + 1, lua.LUA_OPLE))
+    || (!isStepPositive && vm.compare(a + 1, a, lua.LUA_OPLE))
+  ) {
+    vm.addPC(sbx);
+    vm.copy(a, a + 3);
+  }
+};
 
 const opCodeInfos = [
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'MOVE    ', move), // R(A) := R(B)
@@ -228,20 +278,20 @@ const opCodeInfos = [
   new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SHR     ', shr), // R(A) := RK(B) >> RK(C)
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'UNM     ', unm), // R(A) := -R(B)
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'BNOT    ', bnot), // R(A) := ~R(B)
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'NOT     '), // R(A) := not R(B)
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'LEN     ', len), // R(A) := length of R(B)
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.R, OpMode.IABC, 'CONCAT  ', concat), // R(A) := R(B).. ... ..R(C)
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'NOT     ', not), // R(A) := not R(B)
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'LEN     '), // R(A) := length of R(B)
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.R, OpMode.IABC, 'CONCAT  '), // R(A) := R(B).. ... ..R(C)
   new OpCodeInfo(0, 0, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'JMP     ', jmp), // pc+=sBx; if (A) close all upvalues >= R(A - 1)
-  new OpCodeInfo(1, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'EQ      '), // if ((RK(B) == RK(C)) ~= A) then pc++
-  new OpCodeInfo(1, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'LT      '), // if ((RK(B) <  RK(C)) ~= A) then pc++
-  new OpCodeInfo(1, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'LE      '), // if ((RK(B) <= RK(C)) ~= A) then pc++
-  new OpCodeInfo(1, 0, OpArgMask.N, OpArgMask.U, OpMode.IABC, 'TEST    '), // if not (R(A) <=> C) then pc++
-  new OpCodeInfo(1, 1, OpArgMask.R, OpArgMask.U, OpMode.IABC, 'TESTSET '), // if (R(B) <=> C) then R(A) := R(B) else pc++
+  new OpCodeInfo(1, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'EQ      ', eq), // if ((RK(B) == RK(C)) ~= A) then pc++
+  new OpCodeInfo(1, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'LT      ', lt), // if ((RK(B) <  RK(C)) ~= A) then pc++
+  new OpCodeInfo(1, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'LE      ', le), // if ((RK(B) <= RK(C)) ~= A) then pc++
+  new OpCodeInfo(1, 0, OpArgMask.N, OpArgMask.U, OpMode.IABC, 'TEST    ', test), // if not (R(A) <=> C) then pc++
+  new OpCodeInfo(1, 1, OpArgMask.R, OpArgMask.U, OpMode.IABC, 'TESTSET ', testSet), // if (R(B) <=> C) then R(A) := R(B) else pc++
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'CALL    '), // R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1))
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'TAILCALL'), // return R(A)(R(A+1), ... ,R(A+B-1))
   new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'RETURN  '), // return R(A), ... ,R(A+B-2)
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'FORLOOP '), // R(A)+=R(A+2); if R(A) <?= R(A+1) then { pc+=sBx; R(A+3)=R(A) }
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'FORPREP '), // R(A)-=R(A+2); pc+=sBx
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'FORLOOP ', forLoop), // R(A)+=R(A+2); if R(A) <?= R(A+1) then { pc+=sBx; R(A+3)=R(A) }
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'FORPREP ', forPrep), // R(A)-=R(A+2); pc+=sBx
   new OpCodeInfo(0, 0, OpArgMask.N, OpArgMask.U, OpMode.IABC, 'TFORCALL'), // R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2));
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'TFORLOOP'), // if R(A+1) ~= nil then { R(A)=R(A+1); pc += sBx }
   new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'SETLIST '), // R(A)[(C-1)*FPF+i] := R(A+i), 1 <= i <= B
