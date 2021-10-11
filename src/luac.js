@@ -109,7 +109,7 @@ const luaMain = (proto, printState) => {
     ins.execute(ls);
 
     if (printState) {
-      process.stdout.write(`[${pc + 1}] ${debugName} ${ls.toString()}\n`);
+      process.stdout.write(`[${pc + 1}] ${debugName} ${ls.toDebugString()}\n`);
     }
   }
 

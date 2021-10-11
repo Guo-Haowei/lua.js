@@ -288,9 +288,27 @@ export default class LuaState {
     }
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  concat() {
-    throw new Error('TODO: implement');
+  concat(n) {
+    if (n === 1) {
+      return;
+    }
+
+    if (n === 0) {
+      this.stack.push('');
+      return;
+    }
+
+    for (let i = 1; i < n; i += 1) {
+      if (!this.isString(-1) || !this.isString(-2)) {
+        throw new Error('concat error');
+      }
+
+      const s2 = this.toString(-1);
+      const s1 = this.toString(-2);
+      this.stack.pop();
+      this.stack.pop();
+      this.stack.push(s1 + s2);
+    }
   }
 
   addPC(n) {
@@ -337,8 +355,37 @@ export default class LuaState {
     return num;
   }
 
+  // api_access
+  isString(idx) {
+    const val = this.stack.get(idx);
+    const type = getLuaType(val);
+    return type === lua.LUA_TSTRING || type === lua.LUA_TNUMBER;
+  }
+
+  toStringX(idx) {
+    const val = this.stack.get(idx);
+    const type = getLuaType(val);
+    switch (type) {
+      case lua.LUA_TSTRING:
+        return [val, true];
+      case lua.LUA_TNUMBER: {
+        const s = `${val}`;
+        this.stack.set(idx, s); // convert from number to string
+        return [s, true];
+      }
+      default:
+        return ['', false];
+    }
+  }
+
+  toString(idx) {
+    // eslint-disable-next-line no-unused-vars
+    const [s, ok] = this.toStringX(idx);
+    return s;
+  }
+
   // debug
-  toString() {
+  toDebugString() {
     let result = '';
     for (let i = 0; i < this.stack.top; i += 1) {
       result += `[${convertToString(this.stack.slots[i])}]`;

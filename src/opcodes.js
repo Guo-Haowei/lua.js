@@ -195,6 +195,30 @@ const not = (ins, vm) => {
   vm.replace(a);
 };
 
+const len = (ins, vm) => {
+  let { a, b } = ins.iABC();
+  a += 1;
+  b += 1;
+
+  vm.len(b);
+  vm.replace(a);
+};
+
+const concat = (ins, vm) => {
+  let { a, b, c } = ins.iABC();
+  a += 1;
+  b += 1;
+  c += 1;
+
+  const n = c - b + 1;
+  vm.checkStack(n);
+  for (let i = b; i <= c; i += 1) {
+    vm.pushValue(i);
+  }
+  vm.concat(n);
+  vm.replace(a);
+};
+
 const testSet = (ins, vm) => {
   let { a, b, c } = ins.iABC();
   a += 1;
@@ -326,8 +350,8 @@ const opCodeInfos = [
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'UNM     ', unm), // R(A) := -R(B)
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'BNOT    ', bnot), // R(A) := ~R(B)
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'NOT     ', not), // R(A) := not R(B)
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'LEN     '), // R(A) := length of R(B)
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.R, OpMode.IABC, 'CONCAT  '), // R(A) := R(B).. ... ..R(C)
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'LEN     ', len), // R(A) := length of R(B)
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.R, OpMode.IABC, 'CONCAT  ', concat), // R(A) := R(B).. ... ..R(C)
   new OpCodeInfo(0, 0, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'JMP     ', jmp), // pc+=sBx; if (A) close all upvalues >= R(A - 1)
   new OpCodeInfo(1, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'EQ      ', eq), // if ((RK(B) == RK(C)) ~= A) then pc++
   new OpCodeInfo(1, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'LT      ', lt), // if ((RK(B) <  RK(C)) ~= A) then pc++
