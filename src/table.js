@@ -65,4 +65,8 @@ export default class LuaTable {
       delete this.map[key];
     }
   }
+
+  len() {
+    return this.arr.length;
+  }
 }

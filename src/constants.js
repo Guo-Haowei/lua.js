@@ -20,3 +20,14 @@ counter = 0;
 export const LUA_OPEQ = counter++; // ==
 export const LUA_OPLT = counter++; // <
 export const LUA_OPLE = counter++; // <=
+
+export const LUA_TNONE = -1;
+export const LUA_TNIL = 0;
+export const LUA_TBOOLEAN = 1;
+export const LUA_TLIGHTUSERDATA = 2;
+export const LUA_TNUMBER = 3;
+export const LUA_TSTRING = 4;
+export const LUA_TTABLE = 5;
+export const LUA_TFUNCTION = 6;
+export const LUA_TUSERDATA = 7;
+export const LUA_TTHREAD = 8;

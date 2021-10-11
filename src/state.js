@@ -1,7 +1,13 @@
 /* eslint-disable no-bitwise */
 import LuaStack from './stack.js';
 import * as lua from './constants.js';
-import { convertToBoolean, convertToNumber, convertToString } from './value.js';
+import {
+  convertToBoolean,
+  convertToNumber,
+  convertToString,
+  getLuaType,
+  getLuaTypeString,
+} from './value.js';
 
 const operators = [
   {
@@ -211,9 +217,19 @@ export default class LuaState {
     return func(a, b);
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  len() {
-    throw new Error('TODO: implement');
+  len(idx) {
+    const val = this.stack.get(idx);
+    const luaType = getLuaType(val);
+    switch (luaType) {
+      case lua.LUA_TSTRING:
+        this.stack.push(val.length);
+        break;
+      case lua.LUA_TTABLE:
+        this.stack.push(val.len());
+        break;
+      default:
+        throw new Error(`cannot call len() on ${val}(type: ${getLuaTypeString(val)})`);
+    }
   }
 
   // eslint-disable-next-line class-methods-use-this

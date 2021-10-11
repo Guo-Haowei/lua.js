@@ -67,6 +67,10 @@ describe('state.js', () => {
         assert.equal(state4.toString(), '[1][2]');
         state4.arith(lua.LUA_OPDIV);
         assert.equal(state4.toString(), '[0.5]');
+        const str = 'hello';
+        state4.pushString(str);
+        state4.len(2);
+        assert.equal(state4.toString(), `[0.5][${str}][${str.length}]`);
       });
     });
   });
