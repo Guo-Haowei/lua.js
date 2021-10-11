@@ -255,7 +255,7 @@ const newTable = (ins, vm) => {
   let { a } = ins.iABC(); // we don't pass initial size to construct table
   a += 1;
 
-  vm.createTable();
+  vm.newTable();
   vm.replace(a);
 };
 

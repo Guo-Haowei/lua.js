@@ -47,6 +47,25 @@ const convertToNumber = (val) => {
   }
 };
 
+const tmpTableToString = (table) => {
+  const { arr, map } = table;
+  let result = '';
+  arr.forEach((ele, i) => {
+    result += `${i}:${ele}, `;
+  });
+
+  // eslint-disable-next-line no-restricted-syntax
+  for (const [key, value] of Object.entries(map)) {
+    result += `'${key}':${value}`;
+  }
+
+  if (result.endsWith(', ')) {
+    result = result.slice(0, -2);
+  }
+
+  return result;
+};
+
 const convertToString = (val) => {
   const type = getLuaType(val);
   switch (type) {
@@ -56,10 +75,8 @@ const convertToString = (val) => {
     case lua.LUA_TNUMBER:
     case lua.LUA_TSTRING:
       return `${val}`;
-    case lua.LUA_TTABLE:
-      // eslint-disable-next-line no-console
-      console.log(val);
-      throw new Error('TODO: implement');
+    case lua.LUA_TTABLE: // temp
+      return tmpTableToString(val);
     default:
       throw new Error('unreachable');
   }
