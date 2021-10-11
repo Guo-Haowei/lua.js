@@ -12,7 +12,7 @@ const getLuaType = (val) => {
     case 'string': return lua.LUA_TSTRING;
     case 'object': if (val instanceof LuaTable) { return lua.LUA_TTABLE; }
     // eslint-disable-next-line no-fallthrough
-    default: throw new Error(`Invalid value ${val}`);
+    default: throw new Error(`Invalid value [${val}] of js type '${typeof val}''`);
   }
 };
 

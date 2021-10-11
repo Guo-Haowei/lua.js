@@ -1,43 +1,38 @@
 import { opCodeInfos } from './opcodes.js';
 
-const MAXARG_BX = 262143; // 1 << 18 - 1
-const MAXARG_SBX = 131071; // MAXARG_BX >> 1
+import {
+  iABCImpl,
+  iABxImpl,
+  iAsBxImpl,
+  iAxImpl,
+  MAXARG_BX,
+  MAXARG_SBX,
+} from './helpers.js';
 
-/* eslint-disable no-bitwise */
 class Instruction {
   constructor(raw) {
     this.raw = raw;
   }
 
   opCode() {
+    // eslint-disable-next-line no-bitwise
     return this.raw & 0x3F;
   }
 
   iABC() {
-    return {
-      a: (this.raw >>> 6) & 0xFF,
-      c: (this.raw >>> 14) & 0x1FF,
-      b: (this.raw >>> 23) & 0x1FF,
-    };
+    return iABCImpl(this.raw);
   }
 
   iABx() {
-    return {
-      a: (this.raw >>> 6) & 0xFF,
-      bx: (this.raw >>> 14),
-    };
+    return iABxImpl(this.raw);
   }
 
   iAsBx() {
-    const { a, bx } = this.iABx();
-    return {
-      a,
-      sbx: bx - MAXARG_SBX,
-    };
+    return iAsBxImpl(this.raw);
   }
 
   iAx() {
-    return { ax: (this.raw >>> 6) };
+    return iAxImpl(this.raw);
   }
 
   getInfo() {
@@ -53,7 +48,6 @@ class Instruction {
     action(this, vm);
   }
 }
-/* eslint-enable no-bitwise */
 
 export {
   MAXARG_BX,

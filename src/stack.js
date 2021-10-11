@@ -1,3 +1,5 @@
+import { getLuaType } from './value.js';
+
 export default class LuaStack {
   constructor(n) {
     this.slots = new Array(n);
@@ -14,6 +16,9 @@ export default class LuaStack {
   }
 
   push(val) {
+    // validate type of value
+    getLuaType(val);
+
     if (this.top >= this.slots.length) {
       // eslint-disable-next-line no-console
       console.error(`attempted to push [${val}] to stack(${this.top}/${this.slots.length})`);

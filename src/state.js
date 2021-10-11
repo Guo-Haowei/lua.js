@@ -8,6 +8,7 @@ import {
   getLuaType,
   getLuaTypeString,
 } from './value.js';
+import LuaTable from './table.js';
 
 const operators = [
   {
@@ -163,11 +164,13 @@ export default class LuaState {
     }
   }
 
-  static checkType(val, type) {
-    // eslint-disable-next-line valid-typeof
-    if (typeof val !== type) {
-      throw new Error(`type of ${val} is not ${type}!`);
+  static checkType(value, expect) {
+    const actual = getLuaType(value);
+    if (actual === expect) {
+      return;
     }
+
+    throw new Error(`type of ${value} is not ${getLuaTypeString(expect)}!`);
   }
 
   pushNil() {
@@ -175,18 +178,71 @@ export default class LuaState {
   }
 
   pushBoolean(val) {
-    LuaState.checkType(val, 'boolean');
+    LuaState.checkType(val, lua.LUA_TBOOLEAN);
     this.stack.push(val);
   }
 
   pushNumber(val) {
-    LuaState.checkType(val, 'number');
+    LuaState.checkType(val, lua.LUA_TNUMBER);
     this.stack.push(val);
   }
 
   pushString(val) {
-    LuaState.checkType(val, 'string');
+    LuaState.checkType(val, lua.LUA_TSTRING);
     this.stack.push(val);
+  }
+
+  newTable() {
+    const table = new LuaTable();
+    this.stack.push(table);
+  }
+
+  getTableInteral(table, key) {
+    LuaState.checkType(table, lua.LUA_TTABLE);
+
+    const value = table.get(key);
+    this.stack.push(value);
+    return getLuaType(value);
+  }
+
+  getTable(idx) {
+    const table = this.stack.get(idx);
+    const key = this.stack.pop();
+    return this.getTableInteral(table, key);
+  }
+
+  getField(idx, key) {
+    const table = this.stack.get(idx);
+    return this.getTableInteral(table, key);
+  }
+
+  getIdx(idx, i) {
+    const table = this.stack.get(idx);
+    return this.getTableInteral(table, i);
+  }
+
+  static setTableInternal(table, key, value) {
+    LuaState.checkType(table, lua.LUA_TTABLE);
+    table.put(key, value);
+  }
+
+  setTable(idx) {
+    const table = this.stack.get(idx);
+    const value = this.stack.pop();
+    const key = this.stack.pop();
+    LuaState.setTableInternal(table, key, value);
+  }
+
+  setField(idx, key) {
+    const table = this.stack.get(idx);
+    const value = this.stack.pop();
+    LuaState.setTableInternal(table, key, value);
+  }
+
+  setI(idx, i) {
+    const table = this.stack.get(idx);
+    const value = this.stack.pop();
+    LuaState.setTableInternal(table, i, value);
   }
 
   arith(op) {

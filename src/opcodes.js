@@ -1,5 +1,6 @@
 /* eslint-disable prefer-const */
 import * as lua from './constants.js';
+import { iAxImpl } from './helpers.js';
 
 /* eslint-disable no-plusplus */
 let counter = 0;
@@ -250,6 +251,52 @@ const forLoop = (ins, vm) => {
   }
 };
 
+const newTable = (ins, vm) => {
+  let { a } = ins.iABC(); // we don't pass initial size to construct table
+  a += 1;
+
+  vm.createTable();
+  vm.replace(a);
+};
+
+const getTable = (ins, vm) => {
+  let { a, b, c } = ins.iABC();
+  a += 1;
+  b += 1;
+
+  vm.getRK(c);
+  vm.getTable(b);
+  vm.replace(a);
+};
+
+const setTable = (ins, vm) => {
+  let { a, b, c } = ins.iABC();
+  a += 1;
+
+  vm.getRK(b);
+  vm.getRK(c);
+  vm.setTable(a);
+};
+
+const setList = (ins, vm) => {
+  let { a, b, c } = ins.iABC();
+  a += 1;
+
+  if (c > 0) {
+    c -= 1;
+  } else {
+    c = iAxImpl(vm.fetch).ax;
+  }
+
+  const LFIELDS_PER_FLUSH = 50;
+  let idx = c * LFIELDS_PER_FLUSH;
+  for (let i = 1; i <= b; i += 1) {
+    idx += 1;
+    vm.pushValue(a + i);
+    vm.setI(a, idx);
+  }
+};
+
 const opCodeInfos = [
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'MOVE    ', move), // R(A) := R(B)
   new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.N, OpMode.IABx, 'LOADK   ', loadK), // R(A) := Kst(Bx)
@@ -258,11 +305,11 @@ const opCodeInfos = [
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'LOADNIL ', loadNil), // R(A), R(A+1), ..., R(A+B) := nil
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'GETUPVAL'), // R(A) := UpValue[B]
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.K, OpMode.IABC, 'GETTABUP'), // R(A) := UpValue[B][RK(C)]
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.K, OpMode.IABC, 'GETTABLE'), // R(A) := R(B)[RK(C)]
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.K, OpMode.IABC, 'GETTABLE', getTable), // R(A) := R(B)[RK(C)]
   new OpCodeInfo(0, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SETTABUP'), // UpValue[A][RK(B)] := RK(C)
   new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'SETUPVAL'), // UpValue[B] := R(A)
-  new OpCodeInfo(0, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SETTABLE'), // R(A)[RK(B)] := RK(C)
-  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'NEWTABLE'), // R(A) := {} (size = B,C)
+  new OpCodeInfo(0, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SETTABLE', setTable), // R(A)[RK(B)] := RK(C)
+  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'NEWTABLE', newTable), // R(A) := {} (size = B,C)
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.K, OpMode.IABC, 'SELF    '), // R(A+1) := R(B); R(A) := R(B)[RK(C)]
   new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'ADD     ', add), // R(A) := RK(B) + RK(C)
   new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SUB     ', sub), // R(A) := RK(B) - RK(C)
@@ -294,7 +341,7 @@ const opCodeInfos = [
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'FORPREP ', forPrep), // R(A)-=R(A+2); pc+=sBx
   new OpCodeInfo(0, 0, OpArgMask.N, OpArgMask.U, OpMode.IABC, 'TFORCALL'), // R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2));
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'TFORLOOP'), // if R(A+1) ~= nil then { R(A)=R(A+1); pc += sBx }
-  new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'SETLIST '), // R(A)[(C-1)*FPF+i] := R(A+i), 1 <= i <= B
+  new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'SETLIST ', setList), // R(A)[(C-1)*FPF+i] := R(A+i), 1 <= i <= B
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABx, 'CLOSURE '), // R(A) := closure(KPROTO[Bx])
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'VARARG  '), // R(A), R(A+1), ..., R(A+B-2) = vararg
   new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.U, OpMode.IAx, 'EXTRAARG'), //  extra (larger) argument for previous opcode
