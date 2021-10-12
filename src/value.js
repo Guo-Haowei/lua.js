@@ -37,6 +37,15 @@ const getLuaTypeString = (val) => {
   }
 };
 
+const expectLuaType = (value, expect) => {
+  const actual = getLuaType(value);
+  if (actual === expect) {
+    return;
+  }
+
+  throw new Error(`type of ${value} is not ${getLuaTypeString(expect)}!`);
+};
+
 const convertToBoolean = (val) => {
   const type = getLuaType(val);
   switch (type) {
@@ -58,6 +67,7 @@ const convertToNumber = (val) => {
   }
 };
 
+// HACK: need to fix
 const tmpTableToString = (table) => {
   const { arr, map } = table;
   let result = '';
@@ -99,4 +109,5 @@ export {
   convertToString,
   getLuaType,
   getLuaTypeString,
+  expectLuaType,
 };

@@ -26,13 +26,13 @@ describe('table.js', () => {
     it('should not append nil', () => {
       const { arr } = table;
       table.put(arr.length + 1, undefined);
-      assert.equal(arr.toString(), initArr.toString());
+      assert.deepEqual(arr, initArr);
     });
 
     it('should remove last element if append nil', () => {
       const { arr } = table;
       table.put(arr.length, undefined);
-      assert.equal(arr.toString(), initArr.slice(0, -1).toString());
+      assert.deepEqual(arr, initArr.slice(0, -1));
     });
   });
 });

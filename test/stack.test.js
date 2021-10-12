@@ -45,5 +45,16 @@ describe('stack.js', () => {
         assert.throw(() => { stack2.pop(); }, 'stack underflow!');
       });
     });
+    describe('popN()', () => {
+      const array = [true, 10, 20.5, false, 'hello'];
+      const stack = createDummyStack(array.length);
+      array.forEach((ele) => {
+        stack.push(ele);
+      });
+      const offset = 1;
+      it(`should pop ${array.slice(offset)}}`, () => {
+        assert.deepEqual(stack.popN(array.length - offset), array.slice(offset));
+      });
+    });
   });
 });

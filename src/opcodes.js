@@ -1,6 +1,6 @@
 /* eslint-disable prefer-const */
 import * as lua from './constants.js';
-import { iAxImpl } from './helpers.js';
+import { iAxImpl } from './misc.js';
 
 /* eslint-disable no-plusplus */
 let counter = 0;
@@ -85,14 +85,14 @@ class OpCodeInfo {
   }
 }
 
-const move = (ins, vm) => {
+const luamove = (ins, vm) => {
   let { a, b } = ins.iABC();
   a += 1;
   b += 1;
   vm.copy(b, a);
 };
 
-const jmp = (ins, vm) => {
+const luajmp = (ins, vm) => {
   const { a, sbx } = ins.iAsBx();
   vm.addPC(sbx);
   if (a !== 0) {
@@ -100,7 +100,7 @@ const jmp = (ins, vm) => {
   }
 };
 
-const loadNil = (ins, vm) => {
+const lualoadNil = (ins, vm) => {
   let { a, b } = ins.iABC();
   a += 1;
   vm.pushNil();
@@ -110,7 +110,7 @@ const loadNil = (ins, vm) => {
   vm.pop(1);
 };
 
-const loadBool = (ins, vm) => {
+const lualoadBool = (ins, vm) => {
   let { a, b, c } = ins.iABC();
   a += 1;
 
@@ -121,7 +121,7 @@ const loadBool = (ins, vm) => {
   }
 };
 
-const loadK = (ins, vm) => {
+const lualoadK = (ins, vm) => {
   let { a, bx } = ins.iABx();
   a += 1;
 
@@ -129,7 +129,7 @@ const loadK = (ins, vm) => {
   vm.replace(a);
 };
 
-const loadKx = (ins, vm) => {
+const lualoadKx = (ins, vm) => {
   let { a } = ins.iABx();
   a += 1;
   // eslint-disable-next-line no-bitwise
@@ -158,20 +158,20 @@ const unaryArith = (ins, vm, op) => {
   vm.replace(a);
 };
 
-const add = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPADD); };
-const sub = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPSUB); };
-const mul = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPMUL); };
-const mod = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPMOD); };
-const pow = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPPOW); };
-const div = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPDIV); };
-const idiv = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPIDIV); };
-const band = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPBAND); };
-const bor = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPBOR); };
-const bxor = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPBXOR); };
-const shl = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPSHL); };
-const shr = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPSHR); };
-const unm = (ins, vm) => { unaryArith(ins, vm, lua.LUA_OPUNM); };
-const bnot = (ins, vm) => { unaryArith(ins, vm, lua.LUA_OPBNOT); };
+const luaadd = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPADD); };
+const luasub = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPSUB); };
+const luamul = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPMUL); };
+const luamod = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPMOD); };
+const luapow = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPPOW); };
+const luadiv = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPDIV); };
+const luaidiv = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPIDIV); };
+const luaband = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPBAND); };
+const luabor = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPBOR); };
+const luabxor = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPBXOR); };
+const luashl = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPSHL); };
+const luashr = (ins, vm) => { binaryArith(ins, vm, lua.LUA_OPSHR); };
+const luaunm = (ins, vm) => { unaryArith(ins, vm, lua.LUA_OPUNM); };
+const luabnot = (ins, vm) => { unaryArith(ins, vm, lua.LUA_OPBNOT); };
 
 const compare = (ins, vm, op) => {
   const { a, b, c } = ins.iABC();
@@ -183,11 +183,11 @@ const compare = (ins, vm, op) => {
   vm.pop(2);
 };
 
-const eq = (ins, vm) => { compare(ins, vm, lua.LUA_OPEQ); };
-const lt = (ins, vm) => { compare(ins, vm, lua.LUA_OPLT); };
-const le = (ins, vm) => { compare(ins, vm, lua.LUA_OPLE); };
+const luaeq = (ins, vm) => { compare(ins, vm, lua.LUA_OPEQ); };
+const lualt = (ins, vm) => { compare(ins, vm, lua.LUA_OPLT); };
+const luale = (ins, vm) => { compare(ins, vm, lua.LUA_OPLE); };
 
-const not = (ins, vm) => {
+const luanot = (ins, vm) => {
   let { a, b } = ins.iABC();
   a += 1;
   b += 1;
@@ -195,7 +195,7 @@ const not = (ins, vm) => {
   vm.replace(a);
 };
 
-const len = (ins, vm) => {
+const lualen = (ins, vm) => {
   let { a, b } = ins.iABC();
   a += 1;
   b += 1;
@@ -204,7 +204,7 @@ const len = (ins, vm) => {
   vm.replace(a);
 };
 
-const concat = (ins, vm) => {
+const luaconcat = (ins, vm) => {
   let { a, b, c } = ins.iABC();
   a += 1;
   b += 1;
@@ -219,7 +219,7 @@ const concat = (ins, vm) => {
   vm.replace(a);
 };
 
-const testSet = (ins, vm) => {
+const luatestSet = (ins, vm) => {
   let { a, b, c } = ins.iABC();
   a += 1;
   b += 1;
@@ -231,7 +231,7 @@ const testSet = (ins, vm) => {
   }
 };
 
-const test = (ins, vm) => {
+const luatest = (ins, vm) => {
   let { a, c } = ins.iABC();
   a += 1;
 
@@ -240,7 +240,7 @@ const test = (ins, vm) => {
   }
 };
 
-const forPrep = (ins, vm) => {
+const luaforPrep = (ins, vm) => {
   let { a, sbx } = ins.iAsBx();
   a += 1;
 
@@ -254,7 +254,7 @@ const forPrep = (ins, vm) => {
   vm.addPC(sbx);
 };
 
-const forLoop = (ins, vm) => {
+const luaforLoop = (ins, vm) => {
   let { a, sbx } = ins.iAsBx();
   a += 1;
 
@@ -275,7 +275,7 @@ const forLoop = (ins, vm) => {
   }
 };
 
-const newTable = (ins, vm) => {
+const luanewTable = (ins, vm) => {
   let { a } = ins.iABC(); // we don't pass initial size to construct table
   a += 1;
 
@@ -283,7 +283,7 @@ const newTable = (ins, vm) => {
   vm.replace(a);
 };
 
-const getTable = (ins, vm) => {
+const luagetTable = (ins, vm) => {
   let { a, b, c } = ins.iABC();
   a += 1;
   b += 1;
@@ -293,7 +293,7 @@ const getTable = (ins, vm) => {
   vm.replace(a);
 };
 
-const setTable = (ins, vm) => {
+const luasetTable = (ins, vm) => {
   let { a, b, c } = ins.iABC();
   a += 1;
 
@@ -302,7 +302,7 @@ const setTable = (ins, vm) => {
   vm.setTable(a);
 };
 
-const setList = (ins, vm) => {
+const luasetList = (ins, vm) => {
   let { a, b, c } = ins.iABC();
   a += 1;
 
@@ -312,6 +312,13 @@ const setList = (ins, vm) => {
     c = iAxImpl(vm.fetch).ax;
   }
 
+  const bIsZero = b === 0;
+  if (bIsZero) {
+    b = vm.toNumber(-1) - a - 1;
+    vm.pop(1);
+  }
+
+  vm.checkStack(1);
   const LFIELDS_PER_FLUSH = 50;
   let idx = c * LFIELDS_PER_FLUSH;
   for (let i = 1; i <= b; i += 1) {
@@ -319,55 +326,176 @@ const setList = (ins, vm) => {
     vm.pushValue(a + i);
     vm.setI(a, idx);
   }
+
+  if (bIsZero) {
+    for (let i = vm.registerCount(); i <= vm.getTop(); i += 1) {
+      idx += 1;
+      vm.pushValue(i);
+      vm.setI(a, idx);
+    }
+
+    // clear stack
+    vm.setTop(vm.registerCount());
+  }
+};
+
+const luaclosure = (ins, vm) => {
+  let { a, bx } = ins.iABx();
+  a += 1;
+
+  vm.loadProto(bx);
+  vm.replace(a);
+};
+
+// function call helpers
+const fixStack = (a, vm) => {
+  const x = vm.toNumber(-1);
+  vm.pop(1);
+
+  vm.checkStack(x - a);
+  for (let i = a; i < x; i += 1) {
+    vm.pushValue(i);
+  }
+  vm.rotate(vm.registerCount() + 1, x - a);
+};
+
+const pushFuncAndArgs = (a, b, vm) => {
+  if (b >= 1) { // b - 1 args
+    vm.checkStack(b);
+    for (let i = a; i < a + b; i += 1) {
+      vm.pushValue(i);
+      return b - 1;
+    }
+  }
+
+  fixStack(a, vm);
+  return vm.getTop() - vm.registerCount() - 1;
+};
+
+const popResults = (a, c, vm) => {
+  if (c === 1) {
+    return;
+  }
+
+  if (c > 1) {
+    for (let i = a + c - 2; i >= a; i -= 1) {
+      vm.replace(i);
+    }
+    return;
+  }
+
+  vm.checkStack(1);
+  vm.pushNumber(a);
+};
+
+const luacall = (ins, vm) => {
+  let { a, b, c } = ins.iABC();
+  a += 1;
+
+  const nArgs = pushFuncAndArgs(a, b, vm);
+  vm.call(nArgs, c - 1);
+  popResults(a, c, vm);
+};
+
+const luareturn = (ins, vm) => {
+  let { a, b } = ins.iABC();
+  a += 1;
+
+  if (b === 1) {
+    return;
+  }
+
+  if (b > 1) {
+    vm.checkStack(b - 1);
+    for (let i = a; i <= a + b - 2; i += 1) {
+      vm.pushValue(i);
+    }
+
+    return;
+  }
+
+  fixStack(a, vm);
+};
+
+const luavararg = (ins, vm) => {
+  let { a, b } = ins.iABC();
+  a += 1;
+
+  if (b !== 1) {
+    vm.loadVararg(b - 1);
+    popResults(a, b, vm);
+  }
+};
+
+// HACK: temp
+const luatailcall = (ins, vm) => {
+  let { a, b } = ins.iABC();
+  a += 1;
+  const c = 0;
+
+  const nArgs = pushFuncAndArgs(a, b, vm);
+  vm.call(nArgs, c - 1);
+  popResults(a, c, vm);
+};
+
+const luaself = (ins, vm) => {
+  let { a, b, c } = ins.iABC();
+  a += 1;
+  b += 1;
+
+  vm.copy(b, a + 1);
+  vm.getRK(c);
+  vm.getTable(b);
+  vm.replace(a);
 };
 
 const opCodeInfos = [
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'MOVE    ', move), // R(A) := R(B)
-  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.N, OpMode.IABx, 'LOADK   ', loadK), // R(A) := Kst(Bx)
-  new OpCodeInfo(0, 1, OpArgMask.N, OpArgMask.N, OpMode.IABx, 'LOADKX  ', loadKx), // R(A) := Kst(extra arg)
-  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'LOADBOOL', loadBool), // R(A) := (bool)B; if (C) pc++
-  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'LOADNIL ', loadNil), // R(A), R(A+1), ..., R(A+B) := nil
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'MOVE    ', luamove), // R(A) := R(B)
+  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.N, OpMode.IABx, 'LOADK   ', lualoadK), // R(A) := Kst(Bx)
+  new OpCodeInfo(0, 1, OpArgMask.N, OpArgMask.N, OpMode.IABx, 'LOADKX  ', lualoadKx), // R(A) := Kst(extra arg)
+  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'LOADBOOL', lualoadBool), // R(A) := (bool)B; if (C) pc++
+  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'LOADNIL ', lualoadNil), // R(A), R(A+1), ..., R(A+B) := nil
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'GETUPVAL'), // R(A) := UpValue[B]
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.K, OpMode.IABC, 'GETTABUP'), // R(A) := UpValue[B][RK(C)]
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.K, OpMode.IABC, 'GETTABLE', getTable), // R(A) := R(B)[RK(C)]
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.K, OpMode.IABC, 'GETTABLE', luagetTable), // R(A) := R(B)[RK(C)]
   new OpCodeInfo(0, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SETTABUP'), // UpValue[A][RK(B)] := RK(C)
   new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'SETUPVAL'), // UpValue[B] := R(A)
-  new OpCodeInfo(0, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SETTABLE', setTable), // R(A)[RK(B)] := RK(C)
-  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'NEWTABLE', newTable), // R(A) := {} (size = B,C)
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.K, OpMode.IABC, 'SELF    '), // R(A+1) := R(B); R(A) := R(B)[RK(C)]
-  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'ADD     ', add), // R(A) := RK(B) + RK(C)
-  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SUB     ', sub), // R(A) := RK(B) - RK(C)
-  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'MUL     ', mul), // R(A) := RK(B) * RK(C)
-  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'MOD     ', mod), // R(A) := RK(B) % RK(C)
-  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'POW     ', pow), // R(A) := RK(B) ^ RK(C)
-  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'DIV     ', div), // R(A) := RK(B) / RK(C)
-  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'IDIV    ', idiv), // R(A) := RK(B) // RK(C)
-  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'BAND    ', band), // R(A) := RK(B) & RK(C)
-  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'BOR     ', bor), // R(A) := RK(B) | RK(C)
-  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'BXOR    ', bxor), // R(A) := RK(B) ~ RK(C)
-  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SHL     ', shl), // R(A) := RK(B) << RK(C)
-  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SHR     ', shr), // R(A) := RK(B) >> RK(C)
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'UNM     ', unm), // R(A) := -R(B)
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'BNOT    ', bnot), // R(A) := ~R(B)
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'NOT     ', not), // R(A) := not R(B)
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'LEN     ', len), // R(A) := length of R(B)
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.R, OpMode.IABC, 'CONCAT  ', concat), // R(A) := R(B).. ... ..R(C)
-  new OpCodeInfo(0, 0, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'JMP     ', jmp), // pc+=sBx; if (A) close all upvalues >= R(A - 1)
-  new OpCodeInfo(1, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'EQ      ', eq), // if ((RK(B) == RK(C)) ~= A) then pc++
-  new OpCodeInfo(1, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'LT      ', lt), // if ((RK(B) <  RK(C)) ~= A) then pc++
-  new OpCodeInfo(1, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'LE      ', le), // if ((RK(B) <= RK(C)) ~= A) then pc++
-  new OpCodeInfo(1, 0, OpArgMask.N, OpArgMask.U, OpMode.IABC, 'TEST    ', test), // if not (R(A) <=> C) then pc++
-  new OpCodeInfo(1, 1, OpArgMask.R, OpArgMask.U, OpMode.IABC, 'TESTSET ', testSet), // if (R(B) <=> C) then R(A) := R(B) else pc++
-  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'CALL    '), // R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1))
-  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'TAILCALL'), // return R(A)(R(A+1), ... ,R(A+B-1))
-  new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'RETURN  '), // return R(A), ... ,R(A+B-2)
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'FORLOOP ', forLoop), // R(A)+=R(A+2); if R(A) <?= R(A+1) then { pc+=sBx; R(A+3)=R(A) }
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'FORPREP ', forPrep), // R(A)-=R(A+2); pc+=sBx
+  new OpCodeInfo(0, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SETTABLE', luasetTable), // R(A)[RK(B)] := RK(C)
+  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'NEWTABLE', luanewTable), // R(A) := {} (size = B,C)
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.K, OpMode.IABC, 'SELF    ', luaself), // R(A+1) := R(B); R(A) := R(B)[RK(C)]
+  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'ADD     ', luaadd), // R(A) := RK(B) + RK(C)
+  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SUB     ', luasub), // R(A) := RK(B) - RK(C)
+  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'MUL     ', luamul), // R(A) := RK(B) * RK(C)
+  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'MOD     ', luamod), // R(A) := RK(B) % RK(C)
+  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'POW     ', luapow), // R(A) := RK(B) ^ RK(C)
+  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'DIV     ', luadiv), // R(A) := RK(B) / RK(C)
+  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'IDIV    ', luaidiv), // R(A) := RK(B) // RK(C)
+  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'BAND    ', luaband), // R(A) := RK(B) & RK(C)
+  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'BOR     ', luabor), // R(A) := RK(B) | RK(C)
+  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'BXOR    ', luabxor), // R(A) := RK(B) ~ RK(C)
+  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SHL     ', luashl), // R(A) := RK(B) << RK(C)
+  new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SHR     ', luashr), // R(A) := RK(B) >> RK(C)
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'UNM     ', luaunm), // R(A) := -R(B)
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'BNOT    ', luabnot), // R(A) := ~R(B)
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'NOT     ', luanot), // R(A) := not R(B)
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IABC, 'LEN     ', lualen), // R(A) := length of R(B)
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.R, OpMode.IABC, 'CONCAT  ', luaconcat), // R(A) := R(B).. ... ..R(C)
+  new OpCodeInfo(0, 0, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'JMP     ', luajmp), // pc+=sBx; if (A) close all upvalues >= R(A - 1)
+  new OpCodeInfo(1, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'EQ      ', luaeq), // if ((RK(B) == RK(C)) ~= A) then pc++
+  new OpCodeInfo(1, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'LT      ', lualt), // if ((RK(B) <  RK(C)) ~= A) then pc++
+  new OpCodeInfo(1, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'LE      ', luale), // if ((RK(B) <= RK(C)) ~= A) then pc++
+  new OpCodeInfo(1, 0, OpArgMask.N, OpArgMask.U, OpMode.IABC, 'TEST    ', luatest), // if not (R(A) <=> C) then pc++
+  new OpCodeInfo(1, 1, OpArgMask.R, OpArgMask.U, OpMode.IABC, 'TESTSET ', luatestSet), // if (R(B) <=> C) then R(A) := R(B) else pc++
+  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'CALL    ', luacall), // R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1))
+  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'TAILCALL', luatailcall), // return R(A)(R(A+1), ... ,R(A+B-1))
+  new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'RETURN  ', luareturn), // return R(A), ... ,R(A+B-2)
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'FORLOOP ', luaforLoop), // R(A)+=R(A+2); if R(A) <?= R(A+1) then { pc+=sBx; R(A+3)=R(A) }
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'FORPREP ', luaforPrep), // R(A)-=R(A+2); pc+=sBx
   new OpCodeInfo(0, 0, OpArgMask.N, OpArgMask.U, OpMode.IABC, 'TFORCALL'), // R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2));
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'TFORLOOP'), // if R(A+1) ~= nil then { R(A)=R(A+1); pc += sBx }
-  new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'SETLIST ', setList), // R(A)[(C-1)*FPF+i] := R(A+i), 1 <= i <= B
-  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABx, 'CLOSURE '), // R(A) := closure(KPROTO[Bx])
-  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'VARARG  '), // R(A), R(A+1), ..., R(A+B-2) = vararg
+  new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'SETLIST ', luasetList), // R(A)[(C-1)*FPF+i] := R(A+i), 1 <= i <= B
+  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABx, 'CLOSURE ', luaclosure), // R(A) := closure(KPROTO[Bx])
+  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'VARARG  ', luavararg), // R(A), R(A+1), ..., R(A+B-2) = vararg
   new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.U, OpMode.IAx, 'EXTRAARG'), //  extra (larger) argument for previous opcode
 ];
 Object.freeze(opCodeInfos);

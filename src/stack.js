@@ -39,6 +39,14 @@ export default class LuaStack {
     this.top += 1;
   }
 
+  pushN(vals, n) {
+    // eslint-disable-next-line no-param-reassign
+    n = n < 0 ? vals.length : n;
+    for (let i = 0; i < n; i += 1) {
+      this.push(vals[i]);
+    }
+  }
+
   pop() {
     if (this.top < 1) {
       throw new Error('stack underflow!');
@@ -46,6 +54,14 @@ export default class LuaStack {
     this.top -= 1;
     const ret = this.slots[this.top];
     this.slots[this.top] = undefined;
+    return ret;
+  }
+
+  popN(n) {
+    const ret = Array(n).fill(undefined);
+    for (let i = n - 1; i >= 0; i -= 1) {
+      ret[i] = this.pop();
+    }
     return ret;
   }
 

@@ -7,7 +7,7 @@ import {
   iAxImpl,
   MAXARG_BX,
   MAXARG_SBX,
-} from './helpers.js';
+} from './misc.js';
 
 class Instruction {
   constructor(raw) {

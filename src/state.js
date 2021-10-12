@@ -4,84 +4,17 @@ import {
   convertToBoolean,
   convertToNumber,
   convertToString,
+  expectLuaType,
   getLuaType,
   getLuaTypeString,
 } from './value.js';
 import LuaTable from './table.js';
-
-const operators = [
-  {
-    symbol: '+',
-    func: (a, b) => a + b,
-  },
-  {
-    symbol: '-',
-    func: (a, b) => a - b,
-  },
-  {
-    symbol: '*',
-    func: (a, b) => a * b,
-  },
-  {
-    symbol: '%',
-    func: (a, b) => a % b,
-  },
-  {
-    symbol: '^',
-    func: (a, b) => a ** b,
-  },
-  {
-    symbol: '/',
-    func: (a, b) => a / b,
-  },
-  {
-    symbol: '//',
-    func: (a, b) => Math.floor(a / b),
-  },
-  {
-    symbol: '&',
-    func: (a, b) => a & b,
-  },
-  {
-    symbol: '|',
-    func: (a, b) => a | b,
-  },
-  {
-    symbol: '~',
-    func: (a, b) => a ^ b,
-  },
-  {
-    symbol: '<<',
-    func: (a, b) => a << b,
-  },
-  {
-    symbol: '>>',
-    func: (a, b) => a >> b,
-  },
-  {
-    symbol: '-',
-    func: (a) => -a,
-  },
-  {
-    symbol: '~',
-    func: () => { throw new Error('TODO: implemented unary bnot'); },
-  },
-];
-
-const comparators = [
-  {
-    symbol: '==',
-    func: (a, b) => a === b,
-  },
-  {
-    symbol: '<',
-    func: (a, b) => a < b,
-  },
-  {
-    symbol: '<=',
-    func: (a, b) => a <= b,
-  },
-];
+import LuaStack from './stack.js';
+import LuaClosure from './closure.js';
+import { operators, comparators } from './misc.js';
+import { undump } from './binary-chunk.js';
+import { Instruction } from './instruction.js';
+import { OpCode } from './opcodes.js';
 
 export default class LuaState {
   constructor() {
@@ -175,31 +108,22 @@ export default class LuaState {
     }
   }
 
-  static checkType(value, expect) {
-    const actual = getLuaType(value);
-    if (actual === expect) {
-      return;
-    }
-
-    throw new Error(`type of ${value} is not ${getLuaTypeString(expect)}!`);
-  }
-
   pushNil() {
     this.stack.push(undefined);
   }
 
   pushBoolean(val) {
-    LuaState.checkType(val, lua.LUA_TBOOLEAN);
+    expectLuaType(val, lua.LUA_TBOOLEAN);
     this.stack.push(val);
   }
 
   pushNumber(val) {
-    LuaState.checkType(val, lua.LUA_TNUMBER);
+    expectLuaType(val, lua.LUA_TNUMBER);
     this.stack.push(val);
   }
 
   pushString(val) {
-    LuaState.checkType(val, lua.LUA_TSTRING);
+    expectLuaType(val, lua.LUA_TSTRING);
     this.stack.push(val);
   }
 
@@ -209,7 +133,7 @@ export default class LuaState {
   }
 
   getTableInteral(table, key) {
-    LuaState.checkType(table, lua.LUA_TTABLE);
+    expectLuaType(table, lua.LUA_TTABLE);
 
     const value = table.get(key);
     this.stack.push(value);
@@ -233,7 +157,7 @@ export default class LuaState {
   }
 
   static setTableInternal(table, key, value) {
-    LuaState.checkType(table, lua.LUA_TTABLE);
+    expectLuaType(table, lua.LUA_TTABLE);
     table.put(key, value);
   }
 
@@ -370,6 +294,10 @@ export default class LuaState {
     return num;
   }
 
+  RegisterCount() {
+    return this.stack.closure.proto.maxStackSize;
+  }
+
   // api_access
   isString(idx) {
     const val = this.stack.get(idx);
@@ -397,6 +325,70 @@ export default class LuaState {
     // eslint-disable-next-line no-unused-vars
     const [s, ok] = this.toStringX(idx);
     return s;
+  }
+
+  // eslint-disable-next-line no-unused-vars
+  load(chunck, chunckName, mode) {
+    const proto = undump(chunck);
+    const closure = new LuaClosure(proto);
+    this.stack.push(closure);
+    return 0;
+  }
+
+  loadVararg(n) {
+    const { varargs } = this.stack;
+    // eslint-disable-next-line no-param-reassign
+    n = n < 0 ? varargs.length : n;
+
+    this.stack.check(n);
+    this.stack.pushN(varargs, n);
+  }
+
+  loadProto(idx) {
+    const proto = this.stack.closure.proto.protos[idx];
+    const closure = new LuaClosure(proto);
+    this.stack.push(closure);
+  }
+
+  call(nArgs, nResults) {
+    const closure = this.stack.get(-(nArgs + 1));
+    expectLuaType(closure, lua.LUA_TFUNCTION);
+
+    const { source, lineDefined, lastLineDefined } = closure.proto;
+    console.log(`call ${source}<${lineDefined},${lastLineDefined}>`);
+    this.callLuaClosure(nArgs, nResults, closure);
+  }
+
+  callLuaClosure(nArgs, nResults, closure) {
+    const { maxStackSize, numParams, isVararg } = closure.proto;
+    const newStack = new LuaStack(closure, maxStackSize + 20);
+
+    const funcAndArgs = this.stack.popN(nArgs + 1);
+    newStack.pushN(funcAndArgs.slice(1), numParams);
+    newStack.top = maxStackSize;
+    if (nArgs > numParams && isVararg) {
+      newStack.varargs = funcAndArgs.slice(numParams + 1);
+    }
+
+    this.pushLuaStack(newStack);
+    this.runLuaClosure();
+    this.popLuaStack();
+
+    if (nResults !== 0) {
+      const results = newStack.popN(newStack.top - maxStackSize);
+      this.stack.check(results.length);
+      this.stack.pushN(results, nResults);
+    }
+  }
+
+  runLuaClosure() {
+    for (;;) {
+      const ins = new Instruction(this.fetch());
+      ins.execute(this);
+      if (ins.opCode() === OpCode.RETURN) {
+        break;
+      }
+    }
   }
 
   // debug
