@@ -1,3 +1,4 @@
+import LuaClosure from './closure.js';
 import * as lua from './constants.js';
 import LuaTable from './table.js';
 
@@ -7,10 +8,19 @@ const getLuaType = (val) => {
   }
 
   switch (typeof val) {
-    case 'boolean': return lua.LUA_TBOOLEAN;
-    case 'number': return lua.LUA_TNUMBER;
-    case 'string': return lua.LUA_TSTRING;
-    case 'object': if (val instanceof LuaTable) { return lua.LUA_TTABLE; }
+    case 'boolean':
+      return lua.LUA_TBOOLEAN;
+    case 'number':
+      return lua.LUA_TNUMBER;
+    case 'string':
+      return lua.LUA_TSTRING;
+    case 'object':
+      if (val instanceof LuaTable) {
+        return lua.LUA_TTABLE;
+      }
+      if (val instanceof LuaClosure) {
+        return lua.LUA_TFUNCTION;
+      }
     // eslint-disable-next-line no-fallthrough
     default: throw new Error(`Invalid value [${val}] of js type '${typeof val}''`);
   }
@@ -22,6 +32,7 @@ const getLuaTypeString = (val) => {
     case lua.LUA_TNUMBER: return 'number';
     case lua.LUA_TSTRING: return 'string';
     case lua.LUA_TTABLE: return 'table';
+    case lua.LUA_TFUNCTION: return 'function';
     default: throw new Error('unreachable');
   }
 };

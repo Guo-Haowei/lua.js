@@ -4,6 +4,8 @@ import { undump } from './binary-chunk.js';
 import { Instruction } from './instruction.js';
 import { OpMode, OpArgMask, OpCode } from './opcodes.js';
 import LuaState from './state.js';
+import LuaClosure from './closure.js';
+import LuaStack from './stack.js';
 
 const APP_NAME = 'luac';
 
@@ -94,10 +96,12 @@ const listProto = (proto) => {
 
 const luaMain = (proto, printState) => {
   const nRegs = proto.maxStackSize;
-  const ls = new LuaState(proto, nRegs + 8);
+  const ls = new LuaState();
+  const stack = new LuaStack(new LuaClosure(proto), nRegs + 8);
+  ls.pushLuaStack(stack);
   ls.setTop(nRegs);
   for (;;) {
-    const { pc } = ls;
+    const pc = ls.pc();
     const ins = new Instruction(ls.fetch());
 
     const { debugName } = ins.getInfo();

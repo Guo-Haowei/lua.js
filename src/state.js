@@ -1,5 +1,4 @@
 /* eslint-disable no-bitwise */
-import LuaStack from './stack.js';
 import * as lua from './constants.js';
 import {
   convertToBoolean,
@@ -84,13 +83,25 @@ const comparators = [
   },
 ];
 
-const DEFAULT_STACKSIZE = 20;
-
 export default class LuaState {
-  constructor(proto, stackSize) {
-    this.proto = proto || undefined;
-    this.stack = new LuaStack(stackSize || DEFAULT_STACKSIZE);
-    this.pc = 0;
+  constructor() {
+    this.stack = null;
+  }
+
+  pushLuaStack(stack) {
+    // eslint-disable-next-line no-param-reassign
+    stack.prevStack = this.stack;
+    this.stack = stack;
+  }
+
+  popLuaStack() {
+    const { stack } = this;
+    if (stack === null) {
+      throw new Error('stack is null');
+    }
+
+    this.stack = stack.prevStack;
+    stack.prevStack = null;
   }
 
   getTop() {
@@ -311,18 +322,22 @@ export default class LuaState {
     }
   }
 
+  pc() {
+    return this.stack.pc;
+  }
+
   addPC(n) {
-    this.pc += n;
+    this.stack.pc += n;
   }
 
   fetch() {
-    const i = this.proto.code[this.pc];
-    this.pc += 1;
+    const i = this.stack.closure.proto.code[this.stack.pc];
+    this.stack.pc += 1;
     return i;
   }
 
   getConst(idx) {
-    const { constants } = this.proto;
+    const { constants } = this.stack.closure.proto;
     if (idx >= constants.length) {
       throw new Error(`index ${idx} is out of range ${constants}`);
     }

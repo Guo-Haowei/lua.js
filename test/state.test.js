@@ -2,11 +2,19 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import LuaState from '../src/state.js';
 import * as lua from '../src/constants.js';
+import LuaStack from '../src/stack.js';
+
+const createDummyState = () => {
+  const state = new LuaState();
+  const stack = new LuaStack(null);
+  state.pushLuaStack(stack);
+  return state;
+};
 
 describe('state.js', () => {
   describe('LuaStack', () => {
     describe('rotate(idx, n)', () => {
-      const state1 = new LuaState();
+      const state1 = createDummyState();
       for (let idx = 0; idx < 5; idx += 1) {
         state1.stack.push(idx);
       }
@@ -19,7 +27,7 @@ describe('state.js', () => {
     });
     describe('basic state operations', () => {
       it('should modify state', () => {
-        const state2 = new LuaState();
+        const state2 = createDummyState();
         state2.pushBoolean(true);
         assert.equal(state2.toDebugString(), '[true]');
         state2.pushNumber(10);
@@ -42,7 +50,7 @@ describe('state.js', () => {
     });
     describe('basic arith operations', () => {
       it('should modify state', () => {
-        const state3 = new LuaState();
+        const state3 = createDummyState();
         [4, 3, 2, 1].forEach((ele) => state3.pushNumber(ele));
         assert.equal(state3.toDebugString(), '[4][3][2][1]');
         state3.arith(lua.LUA_OPSUB);
@@ -55,7 +63,7 @@ describe('state.js', () => {
     });
     describe('more arith operations', () => {
       it('should modify state', () => {
-        const state4 = new LuaState();
+        const state4 = createDummyState();
         [1, 2, 3, 10.4, 4].forEach((ele) => state4.pushNumber(ele));
         state4.arith(lua.LUA_OPIDIV);
         assert.equal(state4.toDebugString(), '[1][2][3][2]');

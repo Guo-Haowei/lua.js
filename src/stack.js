@@ -1,10 +1,20 @@
 import { getLuaType } from './value.js';
 
+const DEFAULT_STACKSIZE = 20;
+
 export default class LuaStack {
-  constructor(n) {
-    this.slots = new Array(n);
+  constructor(closure, n) {
+    if (typeof closure !== 'object') {
+      throw new Error('invalid call');
+    }
+
+    this.slots = new Array(n || DEFAULT_STACKSIZE);
     this.slots.fill(undefined);
     this.top = 0;
+    this.closure = closure;
+    this.prevStack = null;
+    this.varargs = [];
+    this.pc = 0;
   }
 
   // check if there are n slots left
