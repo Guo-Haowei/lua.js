@@ -364,8 +364,8 @@ const pushFuncAndArgs = (a, b, vm) => {
     vm.checkStack(b);
     for (let i = a; i < a + b; i += 1) {
       vm.pushValue(i);
-      return b - 1;
     }
+    return b - 1;
   }
 
   fixStack(a, vm);

@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
-import { luaMain, protoFromFile } from '../src/luac.js';
+import { readFileSync } from 'fs';
+import { luaMain } from '../src/luac.js';
 
 describe('luac.js', () => {
   [
@@ -12,16 +13,23 @@ describe('luac.js', () => {
       fileName: 'sum',
       expect: [2550, 101, 100, 1, 100, 0],
     },
+    {
+      fileName: 'table',
+      expect: [undefined, 'cBaBar3', 'B', 'a', 'Bar', 3],
+    },
   ].forEach((ele) => {
     const { fileName, expect } = ele;
     describe(`execute ${fileName}.luac`, () => {
-      const proto = protoFromFile(`lua/${fileName}.luac`);
-      const ls = luaMain(proto);
+      const chunk = readFileSync(`lua/${fileName}.luac`);
+      const ls = luaMain(chunk, fileName);
 
       const { slots, top } = ls.stack;
       it(`should modify stack to ${expect}`, () => {
         for (let i = 0; i < top; i += 1) {
-          assert.equal(slots[i], expect[i]);
+          // skip object for now
+          if (typeof slots[i] !== 'object') {
+            assert.equal(slots[i], expect[i]);
+          }
         }
       });
     });

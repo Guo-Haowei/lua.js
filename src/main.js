@@ -1,4 +1,5 @@
-import { protoFromFile, listProto, luaMain } from './luac.js';
+import { readFileSync } from 'fs';
+import { luaMain } from './luac.js';
 
 const HELP_STRING = `luac: no input files given
 usage: luac [options] [filenames]
@@ -13,26 +14,18 @@ Available options are:
 `;
 
 const main = () => {
-  const args = process.argv.slice(2);
-  if (args.length === 0) {
-    process.stdout.write(HELP_STRING);
-    return;
-  }
-
-  while (args.length) {
-    const arg = args.shift();
-    switch (arg) {
-      case '-l': {
-        const fileName = args.shift();
-        const proto = protoFromFile(fileName);
-        listProto(proto);
-        break;
-      }
-      default: {
-        const proto = protoFromFile(arg);
-        luaMain(proto, true);
-      }
+  try {
+    const args = process.argv.slice(2);
+    if (args.length === 0) {
+      process.stdout.write(HELP_STRING);
+      return;
     }
+    const fileName = args.shift();
+    const chunk = readFileSync(fileName);
+    luaMain(chunk, fileName);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(err);
   }
 };
 

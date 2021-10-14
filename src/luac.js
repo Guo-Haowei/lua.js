@@ -1,13 +1,7 @@
 /* eslint-disable no-console */
-import { readFileSync } from 'fs';
-import { undump } from './binary-chunk.js';
 import { Instruction } from './instruction.js';
-import { OpMode, OpArgMask, OpCode } from './opcodes.js';
+import { OpMode, OpArgMask } from './opcodes.js';
 import LuaState from './state.js';
-import LuaClosure from './closure.js';
-import LuaStack from './stack.js';
-
-const APP_NAME = 'luac';
 
 const writeInstruction = (ins) => {
   const {
@@ -94,46 +88,14 @@ const listProto = (proto) => {
   protos.forEach((ele) => listProto(ele));
 };
 
-const luaMain = (proto, printState) => {
-  const nRegs = proto.maxStackSize;
+const luaMain = (chunk, fileName) => {
   const ls = new LuaState();
-  const stack = new LuaStack(new LuaClosure(proto), nRegs + 8);
-  ls.pushLuaStack(stack);
-  ls.setTop(nRegs);
-  for (;;) {
-    const pc = ls.pc();
-    const ins = new Instruction(ls.fetch());
-
-    const { debugName } = ins.getInfo();
-
-    if (ins.opCode() === OpCode.RETURN) {
-      break;
-    }
-
-    ins.execute(ls);
-
-    if (printState) {
-      process.stdout.write(`[${pc + 1}] ${debugName} ${ls.toDebugString()}\n`);
-    }
-  }
-
+  ls.load(chunk, fileName, 'b');
+  ls.call(0, 0);
   return ls;
 };
 
-const protoFromFile = (fileName) => {
-  if (typeof fileName !== 'string') {
-    throw new Error(`${APP_NAME}: expect filename`);
-  }
-
-  if (fileName.endsWith('.luac')) {
-    return undump(readFileSync(fileName));
-  }
-
-  throw new Error(`Unsupport source ${fileName}`);
-};
-
 export {
-  protoFromFile,
   luaMain,
   listProto,
 };

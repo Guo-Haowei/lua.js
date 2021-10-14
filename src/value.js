@@ -27,23 +27,24 @@ const getLuaType = (val) => {
 };
 
 const getLuaTypeString = (val) => {
-  switch (getLuaType(val)) {
-    case lua.LUA_TBOOLEAN: return 'nil';
+  switch (val) {
+    case lua.LUA_TNIL: return 'nil';
+    case lua.LUA_TBOOLEAN: return 'boolean';
     case lua.LUA_TNUMBER: return 'number';
     case lua.LUA_TSTRING: return 'string';
     case lua.LUA_TTABLE: return 'table';
     case lua.LUA_TFUNCTION: return 'function';
-    default: throw new Error('unreachable');
+    default: throw new Error(`unexpected value ${val}`);
   }
 };
 
-const expectLuaType = (value, expect) => {
-  const actual = getLuaType(value);
-  if (actual === expect) {
+const expectLuaType = (value, expectType) => {
+  const actualType = getLuaType(value);
+  if (actualType === expectType) {
     return;
   }
 
-  throw new Error(`type of ${value} is not ${getLuaTypeString(expect)}!`);
+  throw new Error(`type of ${value}(${getLuaTypeString(actualType)}) is not ${getLuaTypeString(expectType)}!`);
 };
 
 const convertToBoolean = (val) => {

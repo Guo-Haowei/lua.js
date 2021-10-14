@@ -3,17 +3,13 @@ import { getLuaType } from './value.js';
 const DEFAULT_STACKSIZE = 20;
 
 export default class LuaStack {
-  constructor(closure, n) {
-    if (typeof closure !== 'object') {
-      throw new Error('invalid call');
-    }
-
+  constructor(n) {
     this.slots = new Array(n || DEFAULT_STACKSIZE);
     this.slots.fill(undefined);
     this.top = 0;
-    this.closure = closure;
     this.prevStack = null;
     this.varargs = [];
+    this.closure = null;
     this.pc = 0;
   }
 

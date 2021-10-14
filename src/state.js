@@ -17,8 +17,8 @@ import { Instruction } from './instruction.js';
 import { OpCode } from './opcodes.js';
 
 export default class LuaState {
-  constructor() {
-    this.stack = null;
+  constructor(cap) {
+    this.stack = new LuaStack(cap);
   }
 
   pushLuaStack(stack) {
@@ -199,11 +199,7 @@ export default class LuaState {
     const a = this.stack.get(idx1);
     const b = this.stack.get(idx2);
 
-    const { symbol, func } = comparators[op];
-
-    if (typeof a !== 'number' || typeof b !== 'number') {
-      throw new Error(`invalid comparison: ${a} ${symbol} ${b}`);
-    }
+    const { func } = comparators[op];
 
     return func(a, b);
   }
@@ -219,7 +215,7 @@ export default class LuaState {
         this.stack.push(val.len());
         break;
       default:
-        throw new Error(`cannot call len() on ${val}(type: ${getLuaTypeString(val)})`);
+        throw new Error(`cannot call len() on ${val}(type: ${getLuaTypeString(luaType)})`);
     }
   }
 
@@ -255,8 +251,13 @@ export default class LuaState {
   }
 
   fetch() {
-    const i = this.stack.closure.proto.code[this.stack.pc];
-    this.stack.pc += 1;
+    const { stack } = this;
+    const { code } = stack.closure.proto;
+    if (stack.pc >= code.length) {
+      throw new Error(`pc overflows ${stack.pc}/${code.length}`);
+    }
+    const i = code[stack.pc];
+    stack.pc += 1;
     return i;
   }
 
@@ -294,7 +295,7 @@ export default class LuaState {
     return num;
   }
 
-  RegisterCount() {
+  registerCount() {
     return this.stack.closure.proto.maxStackSize;
   }
 
@@ -361,7 +362,8 @@ export default class LuaState {
 
   callLuaClosure(nArgs, nResults, closure) {
     const { maxStackSize, numParams, isVararg } = closure.proto;
-    const newStack = new LuaStack(closure, maxStackSize + 20);
+    const newStack = new LuaStack(maxStackSize + 20);
+    newStack.closure = closure;
 
     const funcAndArgs = this.stack.popN(nArgs + 1);
     newStack.pushN(funcAndArgs.slice(1), numParams);
@@ -384,6 +386,8 @@ export default class LuaState {
   runLuaClosure() {
     for (;;) {
       const ins = new Instruction(this.fetch());
+      // const { debugName } = ins.getInfo();
+      // console.log(`executing instruction ${debugName}`);
       ins.execute(this);
       if (ins.opCode() === OpCode.RETURN) {
         break;

@@ -1,4 +1,6 @@
 /* eslint-disable no-bitwise */
+import { getLuaType } from './value.js';
+import * as lua from './constants.js';
 
 const MAXARG_BX = 262143; // 1 << 18 - 1
 const MAXARG_SBX = 131071; // MAXARG_BX >> 1
@@ -88,15 +90,37 @@ const operators = [
 const comparators = [
   {
     symbol: '==',
-    func: (a, b) => a === b,
+    func: (a, b) => {
+      const typeA = getLuaType(a);
+      switch (typeA) {
+        case lua.LUA_TNIL:
+          return b === undefined;
+        case lua.LUA_TBOOLEAN:
+        case lua.LUA_TSTRING:
+        case lua.LUA_TNUMBER:
+          return a === b;
+        default:
+          return a === b;
+      }
+    },
   },
   {
     symbol: '<',
-    func: (a, b) => a < b,
+    func: (a, b) => {
+      if (typeof a !== 'number' || typeof b !== 'number') {
+        throw new Error(`invalid comparison: ${a} < ${b}`);
+      }
+      return a < b;
+    },
   },
   {
     symbol: '<=',
-    func: (a, b) => a <= b,
+    func: (a, b) => {
+      if (typeof a !== 'number' || typeof b !== 'number') {
+        throw new Error(`invalid comparison: ${a} <= ${b}`);
+      }
+      return a <= b;
+    },
   },
 ];
 

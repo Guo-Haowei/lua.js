@@ -2,15 +2,15 @@ import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import LuaStack from '../src/stack.js';
 
-const createDummyStack = (len) => new LuaStack(null, len);
-
 describe('stack.js', () => {
   describe('LuaStack', () => {
     const defaultLen = 2;
-    const stack1 = createDummyStack(defaultLen);
+    const stack1 = new LuaStack(defaultLen);
     describe(`constructor(${defaultLen})`, () => {
-      it(`should has ${defaultLen} slots filled with undefined`, () => {
+      it(`should create stack of size ${defaultLen}`, () => {
         assert.equal(stack1.slots.length, defaultLen);
+      });
+      it('should fill slots with undefined', () => {
         stack1.slots.forEach((ele) => {
           assert.equal(ele, undefined);
         });
@@ -28,18 +28,17 @@ describe('stack.js', () => {
         assert.equal(stack1.slots[1], strValue);
       });
       it('should overflow', () => {
-        assert.throw(() => { stack1.push(true); }, 'stack overflow!');
+        assert.throw(() => { for (;;) { stack1.push(true); } }, 'stack overflow!');
       });
     });
     describe('pop()', () => {
       const defaultLen2 = 4;
-      const stack2 = createDummyStack(defaultLen2);
+      const stack2 = new LuaStack(defaultLen2);
       const bool = false;
       stack2.push(bool);
       it(`should pop ${bool}`, () => {
         assert.equal(stack2.pop(), bool);
         assert.equal(stack2.top, 0);
-        assert.equal(stack2.slots.length, defaultLen2);
       });
       it('should underflow', () => {
         assert.throw(() => { stack2.pop(); }, 'stack underflow!');
@@ -47,7 +46,7 @@ describe('stack.js', () => {
     });
     describe('popN()', () => {
       const array = [true, 10, 20.5, false, 'hello'];
-      const stack = createDummyStack(array.length);
+      const stack = new LuaStack(array.length);
       array.forEach((ele) => {
         stack.push(ele);
       });

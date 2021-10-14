@@ -1,20 +1,25 @@
+const DEFAULT_ARRAY_LENGTH = 20;
+
 export default class LuaTable {
   constructor() {
-    this.arr = [];
+    this.arr = new Array(DEFAULT_ARRAY_LENGTH).fill(undefined);
     this.map = {};
   }
 
   shrinkArray() {
     const { arr } = this;
-    while (arr[arr.length - 1] === undefined) {
+    while (arr.length && arr[arr.length - 1] === undefined) {
       arr.pop();
     }
   }
 
   static checkKeyType(key) {
-    const keyType = typeof key;
-    if (keyType !== 'string') {
-      throw new Error(`unexpected key ${key}(type: ${keyType})`);
+    switch (typeof key) {
+      case 'string':
+      case 'number':
+        break;
+      default:
+        throw new Error(`unexpected key ${key}(type: ${typeof key})`);
     }
   }
 
