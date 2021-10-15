@@ -10,7 +10,7 @@ import {
 } from './value.js';
 import LuaTable from './table.js';
 import LuaStack from './stack.js';
-import LuaClosure from './closure.js';
+import { newJsClosure, newLuaClosure } from './closure.js';
 import { operators, comparators } from './misc.js';
 import { undump } from './binary-chunk.js';
 import { Instruction } from './instruction.js';
@@ -331,7 +331,7 @@ export default class LuaState {
   // eslint-disable-next-line no-unused-vars
   load(chunck, chunckName, mode) {
     const proto = undump(chunck);
-    const closure = new LuaClosure(proto);
+    const closure = newLuaClosure(proto);
     this.stack.push(closure);
     return 0;
   }
@@ -347,7 +347,7 @@ export default class LuaState {
 
   loadProto(idx) {
     const proto = this.stack.closure.proto.protos[idx];
-    const closure = new LuaClosure(proto);
+    const closure = newLuaClosure(proto);
     this.stack.push(closure);
   }
 
@@ -355,9 +355,30 @@ export default class LuaState {
     const closure = this.stack.get(-(nArgs + 1));
     expectLuaType(closure, lua.LUA_TFUNCTION);
 
-    const { source, lineDefined, lastLineDefined } = closure.proto;
-    console.log(`call ${source}<${lineDefined},${lastLineDefined}>`);
-    this.callLuaClosure(nArgs, nResults, closure);
+    if (closure.proto) {
+      this.callLuaClosure(nArgs, nResults, closure);
+    } else if (closure.jsFunc) {
+      this.callJsClosure(nArgs, nResults, closure);
+    }
+  }
+
+  callJsClosure(nArgs, nResults, closure) {
+    const newStack = new LuaStack(nArgs + 20);
+    newStack.closure = closure;
+
+    const args = this.stack.popN();
+    newStack.pushN(args, nArgs);
+    this.stack.pop();
+
+    this.pushLuaStack(newStack);
+    const r = closure.jsFunc(this);
+    this.popLuaStack();
+
+    if (nResults !== 0) {
+      const results = newStack.popN(r);
+      this.stack.check(results.length);
+      this.stack.pushN(results, nResults);
+    }
   }
 
   callLuaClosure(nArgs, nResults, closure) {
@@ -393,6 +414,32 @@ export default class LuaState {
         break;
       }
     }
+  }
+
+  pushJsFunc(jsFunc) {
+    this.stack.push(newJsClosure(jsFunc));
+  }
+
+  isJsFunc(idx) {
+    const val = this.stack.get(idx);
+    const type = getLuaType(val);
+
+    if (type === lua.LUA_TFUNCTION) {
+      return !!val.jsFunc;
+    }
+
+    return false;
+  }
+
+  toJsFunc(idx) {
+    const val = this.stack.get(idx);
+    const type = getLuaType(val);
+
+    if (type === lua.LUA_TFUNCTION) {
+      return val.jsFunc;
+    }
+
+    return undefined;
   }
 
   // debug

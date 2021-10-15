@@ -1,6 +1,6 @@
-import LuaClosure from './closure.js';
 import * as lua from './constants.js';
 import LuaTable from './table.js';
+import { LuaClosure } from './closure.js';
 
 const getLuaType = (val) => {
   if (val === undefined) {
