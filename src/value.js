@@ -3,11 +3,9 @@ import LuaTable from './table.js';
 import { LuaClosure } from './closure.js';
 
 const getLuaType = (val) => {
-  if (val === undefined) {
-    return lua.LUA_TNIL;
-  }
-
   switch (typeof val) {
+    case 'undefined':
+      return lua.LUA_TNIL;
     case 'boolean':
       return lua.LUA_TBOOLEAN;
     case 'number':
@@ -22,7 +20,7 @@ const getLuaType = (val) => {
         return lua.LUA_TFUNCTION;
       }
     // eslint-disable-next-line no-fallthrough
-    default: throw new Error(`Invalid value [${val}] of js type '${typeof val}''`);
+    default: throw new Error(`Invalid value [${val}]`);
   }
 };
 

@@ -44,7 +44,7 @@ export default class LuaTable {
       throw new Error('table index is NaN!');
     }
 
-    const { arr } = this;
+    const { arr, map } = this;
     if (Number.isInteger(key)) {
       const idx = key - 1;
       if (idx >= 0) {
@@ -59,13 +59,14 @@ export default class LuaTable {
           }
           return;
         }
+        map[key] = value;
       }
     }
 
     LuaTable.checkKeyType(key);
 
     if (value !== undefined) {
-      this.map[key] = value;
+      map[key] = value;
     } else {
       delete this.map[key];
     }

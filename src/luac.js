@@ -88,8 +88,21 @@ const listProto = (proto) => {
   protos.forEach((ele) => listProto(ele));
 };
 
+const print = (ls) => {
+  const nArgs = ls.getTop();
+  let output = '';
+  for (let i = 1; i <= nArgs; i += 1) {
+    if (ls.isString(i)) {
+      output += `${ls.toString(i)}`;
+    }
+  }
+
+  console.log(output);
+};
+
 const luaMain = (chunk, fileName) => {
   const ls = new LuaState();
+  ls.register('print', print);
   ls.load(chunk, fileName, 'b');
   ls.call(0, 0);
   return ls;

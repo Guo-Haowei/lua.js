@@ -10,7 +10,7 @@ local function max(...)
 end
 
 local function assert(v)
-  return
+  if not v then print('assertion failed') end
 end
 
 local v1 = max(3, 9, 7, 128, 35)

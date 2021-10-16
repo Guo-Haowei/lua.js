@@ -31,3 +31,8 @@ export const LUA_TTABLE = 5;
 export const LUA_TFUNCTION = 6;
 export const LUA_TUSERDATA = 7;
 export const LUA_TTHREAD = 8;
+
+export const LUA_MINSTACK = 20;
+export const LUA_MAXSTACK = 1000000;
+export const LUA_REGISTTERYINDEX = -LUA_MAXSTACK - 1000;
+export const LUA_RIDX_GLOBALS = 2;

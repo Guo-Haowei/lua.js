@@ -1,12 +1,12 @@
 import { getLuaType } from './value.js';
-
-const DEFAULT_STACKSIZE = 20;
+import * as lua from './constants.js';
 
 export default class LuaStack {
-  constructor(n) {
-    this.slots = new Array(n || DEFAULT_STACKSIZE);
+  constructor(n, ls) {
+    this.slots = new Array(n || lua.LUA_MINSTACK);
     this.slots.fill(undefined);
     this.top = 0;
+    this.state = ls;
     this.prevStack = null;
     this.varargs = [];
     this.closure = null;
@@ -62,6 +62,10 @@ export default class LuaStack {
   }
 
   absIdx(idx) {
+    if (idx <= lua.LUA_REGISTTERYINDEX) {
+      return idx;
+    }
+
     if (idx >= 0) {
       return idx;
     }
@@ -70,11 +74,19 @@ export default class LuaStack {
   }
 
   isValidIdx(idx) {
+    if (idx === lua.LUA_REGISTTERYINDEX) {
+      return true;
+    }
+
     const absIdx = this.absIdx(idx);
     return absIdx > 0 && absIdx <= this.top;
   }
 
   get(idx) {
+    if (idx === lua.LUA_REGISTTERYINDEX) {
+      return this.state.registery;
+    }
+
     const absIdx = this.absIdx(idx);
     if (absIdx > 0 && absIdx <= this.top) {
       return this.slots[absIdx - 1];
@@ -84,6 +96,11 @@ export default class LuaStack {
   }
 
   set(idx, val) {
+    if (idx === lua.LUA_REGISTTERYINDEX) {
+      this.state.registery = val;
+      return;
+    }
+
     const absIdx = this.absIdx(idx);
     if (absIdx > 0 && absIdx <= this.top) {
       this.slots[absIdx - 1] = val;

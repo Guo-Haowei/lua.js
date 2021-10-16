@@ -427,6 +427,17 @@ const luavararg = (ins, vm) => {
   }
 };
 
+const luagettabup = (ins, vm) => {
+  let { a, c } = ins.iABC();
+  a += 1;
+
+  vm.pushGlobalTable();
+  vm.getRK(c);
+  vm.getTable(-2);
+  vm.replace(a);
+  vm.pop();
+};
+
 // HACK: temp
 const luatailcall = (ins, vm) => {
   let { a, b } = ins.iABC();
@@ -456,7 +467,7 @@ const opCodeInfos = [
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'LOADBOOL', lualoadBool), // R(A) := (bool)B; if (C) pc++
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'LOADNIL ', lualoadNil), // R(A), R(A+1), ..., R(A+B) := nil
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'GETUPVAL'), // R(A) := UpValue[B]
-  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.K, OpMode.IABC, 'GETTABUP'), // R(A) := UpValue[B][RK(C)]
+  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.K, OpMode.IABC, 'GETTABUP', luagettabup), // R(A) := UpValue[B][RK(C)]
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.K, OpMode.IABC, 'GETTABLE', luagetTable), // R(A) := R(B)[RK(C)]
   new OpCodeInfo(0, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SETTABUP'), // UpValue[A][RK(B)] := RK(C)
   new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'SETUPVAL'), // UpValue[B] := R(A)

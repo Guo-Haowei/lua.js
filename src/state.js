@@ -18,7 +18,12 @@ import { OpCode } from './opcodes.js';
 
 export default class LuaState {
   constructor(cap) {
-    this.stack = new LuaStack(cap);
+    const registery = new LuaTable();
+    registery.put(lua.LUA_RIDX_GLOBALS, new LuaTable());
+    this.registery = registery;
+
+    const size = Math.max((cap || lua.LUA_MINSTACK), lua.LUA_MINSTACK);
+    this.pushLuaStack(new LuaStack(size, this));
   }
 
   pushLuaStack(stack) {
@@ -125,6 +130,27 @@ export default class LuaState {
   pushString(val) {
     expectLuaType(val, lua.LUA_TSTRING);
     this.stack.push(val);
+  }
+
+  pushGlobalTable() {
+    const global = this.registery.get(lua.LUA_RIDX_GLOBALS);
+    this.stack.push(global);
+  }
+
+  getGlobal(name) {
+    const global = this.registery.get(lua.LUA_RIDX_GLOBALS);
+    this.getTable(global, name);
+  }
+
+  setGlobal(name) {
+    const global = this.registery.get(lua.LUA_RIDX_GLOBALS);
+    const value = this.stack.pop();
+    LuaState.setTableInternal(global, name, value);
+  }
+
+  register(name, func) {
+    this.pushJsFunc(func);
+    this.setGlobal(name);
   }
 
   newTable() {
@@ -366,7 +392,7 @@ export default class LuaState {
     const newStack = new LuaStack(nArgs + 20);
     newStack.closure = closure;
 
-    const args = this.stack.popN();
+    const args = this.stack.popN(nArgs);
     newStack.pushN(args, nArgs);
     this.stack.pop();
 
@@ -407,8 +433,6 @@ export default class LuaState {
   runLuaClosure() {
     for (;;) {
       const ins = new Instruction(this.fetch());
-      // const { debugName } = ins.getInfo();
-      // console.log(`executing instruction ${debugName}`);
       ins.execute(this);
       if (ins.opCode() === OpCode.RETURN) {
         break;
@@ -417,7 +441,8 @@ export default class LuaState {
   }
 
   pushJsFunc(jsFunc) {
-    this.stack.push(newJsClosure(jsFunc));
+    const closure = newJsClosure(jsFunc);
+    this.stack.push(closure);
   }
 
   isJsFunc(idx) {
