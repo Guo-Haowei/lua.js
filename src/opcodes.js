@@ -275,7 +275,7 @@ const luaforLoop = (ins, vm) => {
   }
 };
 
-const luanewTable = (ins, vm) => {
+const luanewtable = (ins, vm) => {
   let { a } = ins.iABC(); // we don't pass initial size to construct table
   a += 1;
 
@@ -283,7 +283,7 @@ const luanewTable = (ins, vm) => {
   vm.replace(a);
 };
 
-const luagetTable = (ins, vm) => {
+const luagettable = (ins, vm) => {
   let { a, b, c } = ins.iABC();
   a += 1;
   b += 1;
@@ -293,7 +293,7 @@ const luagetTable = (ins, vm) => {
   vm.replace(a);
 };
 
-const luasetTable = (ins, vm) => {
+const luasettable = (ins, vm) => {
   let { a, b, c } = ins.iABC();
   a += 1;
 
@@ -328,7 +328,7 @@ const luasetList = (ins, vm) => {
   }
 
   if (bIsZero) {
-    for (let i = vm.registerCount(); i <= vm.getTop(); i += 1) {
+    for (let i = vm.registerCount() + 1; i <= vm.getTop(); i += 1) {
       idx += 1;
       vm.pushValue(i);
       vm.setI(a, idx);
@@ -394,6 +394,7 @@ const luacall = (ins, vm) => {
 
   const nArgs = pushFuncAndArgs(a, b, vm);
   vm.call(nArgs, c - 1);
+
   popResults(a, c, vm);
 };
 
@@ -468,11 +469,11 @@ const opCodeInfos = [
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'LOADNIL ', lualoadNil), // R(A), R(A+1), ..., R(A+B) := nil
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'GETUPVAL'), // R(A) := UpValue[B]
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.K, OpMode.IABC, 'GETTABUP', luagettabup), // R(A) := UpValue[B][RK(C)]
-  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.K, OpMode.IABC, 'GETTABLE', luagetTable), // R(A) := R(B)[RK(C)]
+  new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.K, OpMode.IABC, 'GETTABLE', luagettable), // R(A) := R(B)[RK(C)]
   new OpCodeInfo(0, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SETTABUP'), // UpValue[A][RK(B)] := RK(C)
   new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'SETUPVAL'), // UpValue[B] := R(A)
-  new OpCodeInfo(0, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SETTABLE', luasetTable), // R(A)[RK(B)] := RK(C)
-  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'NEWTABLE', luanewTable), // R(A) := {} (size = B,C)
+  new OpCodeInfo(0, 0, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SETTABLE', luasettable), // R(A)[RK(B)] := RK(C)
+  new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'NEWTABLE', luanewtable), // R(A) := {} (size = B,C)
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.K, OpMode.IABC, 'SELF    ', luaself), // R(A+1) := R(B); R(A) := R(B)[RK(C)]
   new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'ADD     ', luaadd), // R(A) := RK(B) + RK(C)
   new OpCodeInfo(0, 1, OpArgMask.K, OpArgMask.K, OpMode.IABC, 'SUB     ', luasub), // R(A) := RK(B) - RK(C)

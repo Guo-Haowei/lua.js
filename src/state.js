@@ -305,9 +305,32 @@ export default class LuaState {
     }
   }
 
+  registerCount() {
+    return this.stack.closure.proto.maxStackSize;
+  }
+
+  // api_access
+  typeName(idx) {
+    const val = this.stack.get(idx);
+    const type = getLuaType(val);
+    return getLuaTypeString(type);
+  }
+
+  isBoolean(idx) {
+    const val = this.stack.get(idx);
+    const type = getLuaType(val);
+    return type === lua.LUA_TBOOLEAN;
+  }
+
   toBoolean(idx) {
     const val = this.stack.get(idx);
     return convertToBoolean(val);
+  }
+
+  isNumber(idx) {
+    const val = this.stack.get(idx);
+    const type = getLuaType(val);
+    return type === lua.LUA_TNUMBER;
   }
 
   toNumber(idx) {
@@ -321,11 +344,6 @@ export default class LuaState {
     return num;
   }
 
-  registerCount() {
-    return this.stack.closure.proto.maxStackSize;
-  }
-
-  // api_access
   isString(idx) {
     const val = this.stack.get(idx);
     const type = getLuaType(val);
@@ -389,7 +407,7 @@ export default class LuaState {
   }
 
   callJsClosure(nArgs, nResults, closure) {
-    const newStack = new LuaStack(nArgs + 20);
+    const newStack = new LuaStack(nArgs + 20, this);
     newStack.closure = closure;
 
     const args = this.stack.popN(nArgs);
@@ -409,12 +427,15 @@ export default class LuaState {
 
   callLuaClosure(nArgs, nResults, closure) {
     const { maxStackSize, numParams, isVararg } = closure.proto;
-    const newStack = new LuaStack(maxStackSize + 20);
+    const nRegs = maxStackSize;
+    const nParams = numParams;
+
+    const newStack = new LuaStack(nRegs + 20, this);
     newStack.closure = closure;
 
     const funcAndArgs = this.stack.popN(nArgs + 1);
-    newStack.pushN(funcAndArgs.slice(1), numParams);
-    newStack.top = maxStackSize;
+    newStack.pushN(funcAndArgs.slice(1), nParams);
+    newStack.top = nRegs;
     if (nArgs > numParams && isVararg) {
       newStack.varargs = funcAndArgs.slice(numParams + 1);
     }
@@ -434,6 +455,7 @@ export default class LuaState {
     for (;;) {
       const ins = new Instruction(this.fetch());
       ins.execute(this);
+
       if (ins.opCode() === OpCode.RETURN) {
         break;
       }

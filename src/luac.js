@@ -93,7 +93,17 @@ const print = (ls) => {
   let output = '';
   for (let i = 1; i <= nArgs; i += 1) {
     if (ls.isString(i)) {
-      output += `${ls.toString(i)}`;
+      output += ls.toString(i);
+    } else if (ls.isNumber(i)) {
+      output += `${ls.toNumber(i)}`;
+    } else if (ls.isBoolean(i)) {
+      output += `${ls.toBoolean(i)}`;
+    } else {
+      output += ls.typeName(i);
+    }
+
+    if (i < nArgs) {
+      output += '\t';
     }
   }
 
