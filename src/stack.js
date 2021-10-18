@@ -119,6 +119,7 @@ export default class LuaStack {
       if (closure && uvIdx < closure.upvals.length) {
         closure.upvals[uvIdx] = val;
       }
+
       return;
     }
 

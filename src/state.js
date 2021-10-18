@@ -394,6 +394,19 @@ export default class LuaState {
     this.stack.pushN(varargs, n);
   }
 
+  closeUpvals(a) {
+    const { openuvs } = this.stack;
+
+    // eslint-disable-next-line no-unused-vars
+    Object.entries(openuvs).forEach(([key, openuv]) => {
+      const i = Number.parseInt(key, 10);
+      if (i >= a - 1) {
+        delete openuvs[key];
+      }
+    });
+    throw new Error(`TODO: implement ${this}`);
+  }
+
   loadProto(idx) {
     const { stack } = this;
     const subProto = stack.closure.proto.protos[idx];
@@ -401,8 +414,8 @@ export default class LuaState {
     stack.push(closure);
 
     subProto.upvals.forEach((uvInfo, i) => {
-      const uvIdx = uvInfo.idx;
-      if (uvInfo.inStack === 1) {
+      const uvIdx = uvInfo.index;
+      if (uvInfo.inStack) {
         if (uvIdx in stack.openuvs) {
           const openuv = stack.openuvs[uvIdx];
           closure.upvals[i] = openuv;
