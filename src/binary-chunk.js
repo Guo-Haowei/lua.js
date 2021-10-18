@@ -152,7 +152,7 @@ class Decoder {
     return ret;
   }
 
-  readUpvalues() {
+  readUpvals() {
     const num = this.readUint32();
     const ret = [];
     for (let idx = 0; idx < num; idx += 1) {
@@ -175,7 +175,7 @@ class Decoder {
     const maxStackSize = this.readByte();
     const code = this.readUint32Array();
     const constants = this.readConstants();
-    const upvalues = this.readUpvalues();
+    const upvals = this.readUpvals();
     const protos = this.readProtos(source);
     const lineInfo = this.readUint32Array();
     const locVars = this.readLocVars();
@@ -189,7 +189,7 @@ class Decoder {
       maxStackSize,
       code,
       constants,
-      upvalues,
+      upvals,
       protos,
       lineInfo,
       locVars,

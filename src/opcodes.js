@@ -302,14 +302,14 @@ const luasettable = (ins, vm) => {
   vm.setTable(a);
 };
 
-const luasetList = (ins, vm) => {
+const luasetlist = (ins, vm) => {
   let { a, b, c } = ins.iABC();
   a += 1;
 
   if (c > 0) {
     c -= 1;
   } else {
-    c = iAxImpl(vm.fetch).ax;
+    c = iAxImpl(vm.fetch()).ax;
   }
 
   const bIsZero = b === 0;
@@ -328,14 +328,15 @@ const luasetList = (ins, vm) => {
   }
 
   if (bIsZero) {
-    for (let i = vm.registerCount() + 1; i <= vm.getTop(); i += 1) {
+    const regCount = vm.registerCount();
+    for (let i = regCount + 1; i <= vm.getTop(); i += 1) {
       idx += 1;
       vm.pushValue(i);
       vm.setI(a, idx);
     }
 
     // clear stack
-    vm.setTop(vm.registerCount());
+    vm.setTop(regCount);
   }
 };
 
@@ -369,7 +370,8 @@ const pushFuncAndArgs = (a, b, vm) => {
   }
 
   fixStack(a, vm);
-  return vm.getTop() - vm.registerCount() - 1;
+  const ret = vm.getTop() - vm.registerCount() - 1;
+  return ret;
 };
 
 const popResults = (a, c, vm) => {
@@ -428,15 +430,16 @@ const luavararg = (ins, vm) => {
   }
 };
 
-const luagettabup = (ins, vm) => {
-  let { a, c } = ins.iABC();
-  a += 1;
+const luaUpvalIdx = (i) => lua.LUA_REGISTTERYINDEX - i;
 
-  vm.pushGlobalTable();
+const luagettabup = (ins, vm) => {
+  let { a, b, c } = ins.iABC();
+  a += 1;
+  b += 1;
+
   vm.getRK(c);
-  vm.getTable(-2);
+  vm.getTable(luaUpvalIdx(b));
   vm.replace(a);
-  vm.pop();
 };
 
 // HACK: temp
@@ -505,7 +508,7 @@ const opCodeInfos = [
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'FORPREP ', luaforPrep), // R(A)-=R(A+2); pc+=sBx
   new OpCodeInfo(0, 0, OpArgMask.N, OpArgMask.U, OpMode.IABC, 'TFORCALL'), // R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2));
   new OpCodeInfo(0, 1, OpArgMask.R, OpArgMask.N, OpMode.IAsBx, 'TFORLOOP'), // if R(A+1) ~= nil then { R(A)=R(A+1); pc += sBx }
-  new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'SETLIST ', luasetList), // R(A)[(C-1)*FPF+i] := R(A+i), 1 <= i <= B
+  new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.U, OpMode.IABC, 'SETLIST ', luasetlist), // R(A)[(C-1)*FPF+i] := R(A+i), 1 <= i <= B
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABx, 'CLOSURE ', luaclosure), // R(A) := closure(KPROTO[Bx])
   new OpCodeInfo(0, 1, OpArgMask.U, OpArgMask.N, OpMode.IABC, 'VARARG  ', luavararg), // R(A), R(A+1), ..., R(A+B-2) = vararg
   new OpCodeInfo(0, 0, OpArgMask.U, OpArgMask.U, OpMode.IAx, 'EXTRAARG'), //  extra (larger) argument for previous opcode

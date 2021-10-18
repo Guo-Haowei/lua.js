@@ -11,6 +11,7 @@ export default class LuaStack {
     this.varargs = [];
     this.closure = null;
     this.pc = 0;
+    this.openuvs = {};
   }
 
   // check if there are n slots left
@@ -74,6 +75,12 @@ export default class LuaStack {
   }
 
   isValidIdx(idx) {
+    if (idx < lua.LUA_REGISTTERYINDEX) {
+      const uvIdx = lua.LUA_REGISTTERYINDEX - idx - 1;
+      const { closure } = this;
+      return closure && uvIdx < closure.upvals.length;
+    }
+
     if (idx === lua.LUA_REGISTTERYINDEX) {
       return true;
     }
@@ -83,6 +90,16 @@ export default class LuaStack {
   }
 
   get(idx) {
+    if (idx < lua.LUA_REGISTTERYINDEX) {
+      const uvIdx = lua.LUA_REGISTTERYINDEX - idx - 1;
+      const { closure } = this;
+      if (closure && uvIdx < closure.upvals.length) {
+        return closure.upvals[uvIdx];
+      }
+
+      return undefined;
+    }
+
     if (idx === lua.LUA_REGISTTERYINDEX) {
       return this.state.registery;
     }
@@ -92,10 +109,19 @@ export default class LuaStack {
       return this.slots[absIdx - 1];
     }
 
-    return null;
+    return undefined;
   }
 
   set(idx, val) {
+    if (idx < lua.LUA_REGISTTERYINDEX) {
+      const uvIdx = lua.LUA_REGISTTERYINDEX - idx - 1;
+      const { closure } = this;
+      if (closure && uvIdx < closure.upvals.length) {
+        closure.upvals[uvIdx] = val;
+      }
+      return;
+    }
+
     if (idx === lua.LUA_REGISTTERYINDEX) {
       this.state.registery = val;
       return;
@@ -111,8 +137,9 @@ export default class LuaStack {
   }
 
   reverse(from, to) {
+    const { slots } = this;
     while (from < to) {
-      [this.slots[from], this.slots[to]] = [this.slots[to], this.slots[from]];
+      [slots[from], slots[to]] = [slots[to], slots[from]];
       // eslint-disable-next-line no-param-reassign
       from += 1; to -= 1;
     }

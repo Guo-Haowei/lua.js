@@ -169,7 +169,8 @@ export default class LuaState {
   getTable(idx) {
     const table = this.stack.get(idx);
     const key = this.stack.pop();
-    return this.getTableInteral(table, key);
+    const ret = this.getTableInteral(table, key);
+    return ret;
   }
 
   getField(idx, key) {
@@ -377,6 +378,10 @@ export default class LuaState {
     const proto = undump(chunck);
     const closure = newLuaClosure(proto);
     this.stack.push(closure);
+    if (proto.upvals.length) {
+      const env = this.registery.get(lua.LUA_RIDX_GLOBALS);
+      closure.upvals[0] = env;
+    }
     return 0;
   }
 
@@ -390,9 +395,25 @@ export default class LuaState {
   }
 
   loadProto(idx) {
-    const proto = this.stack.closure.proto.protos[idx];
-    const closure = newLuaClosure(proto);
-    this.stack.push(closure);
+    const { stack } = this;
+    const subProto = stack.closure.proto.protos[idx];
+    const closure = newLuaClosure(subProto);
+    stack.push(closure);
+
+    subProto.upvals.forEach((uvInfo, i) => {
+      const uvIdx = uvInfo.idx;
+      if (uvInfo.inStack === 1) {
+        if (uvIdx in stack.openuvs) {
+          const openuv = stack.openuvs[uvIdx];
+          closure.upvals[i] = openuv;
+        } else {
+          closure.upvals[i] = stack.slots[uvIdx];
+          stack.openuvs[uvIdx] = closure.upvals[i];
+        }
+      } else {
+        closure.upvals[i] = stack.closure.upvals[uvIdx];
+      }
+    });
   }
 
   call(nArgs, nResults) {
@@ -436,8 +457,8 @@ export default class LuaState {
     const funcAndArgs = this.stack.popN(nArgs + 1);
     newStack.pushN(funcAndArgs.slice(1), nParams);
     newStack.top = nRegs;
-    if (nArgs > numParams && isVararg) {
-      newStack.varargs = funcAndArgs.slice(numParams + 1);
+    if (nArgs > nParams && isVararg) {
+      newStack.varargs = funcAndArgs.slice(nParams + 1);
     }
 
     this.pushLuaStack(newStack);
@@ -454,6 +475,10 @@ export default class LuaState {
   runLuaClosure() {
     for (;;) {
       const ins = new Instruction(this.fetch());
+
+      // console.log(`*** executing ${ins.getInfo().debugName} ***`);
+      // console.log('stack looks like', this.stack.slots);
+
       ins.execute(this);
 
       if (ins.opCode() === OpCode.RETURN) {
@@ -463,7 +488,7 @@ export default class LuaState {
   }
 
   pushJsFunc(jsFunc) {
-    const closure = newJsClosure(jsFunc);
+    const closure = newJsClosure(jsFunc, 0);
     this.stack.push(closure);
   }
 
@@ -487,6 +512,15 @@ export default class LuaState {
     }
 
     return undefined;
+  }
+
+  pushJsClosure(jsFunc, n) {
+    const closure = newJsClosure(jsFunc, n);
+    for (let i = n; i > 0; i -= 1) {
+      const val = this.stack.pop();
+      closure.upvals[n - 1] = val;
+    }
+    this.stack.push(closure);
   }
 
   // debug

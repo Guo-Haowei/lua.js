@@ -53,13 +53,13 @@ const writeInstruction = (ins) => {
 
 const listProto = (proto) => {
   const {
-    lineDefined, code, numParams, upvalues, locVars, constants, protos, lineInfo, upvalueNames,
+    lineDefined, code, numParams, upvals, locVars, constants, protos, lineInfo, upvalueNames,
   } = proto;
   const funcType = lineDefined > 0 ? 'function' : 'main';
   const varargFlag = proto.isVararg > 0 ? '+' : '';
   process.stdout.write(`\n${funcType} <${proto.source}:${lineDefined}:${proto.lastLineDefined}>`);
   process.stdout.write(` (${code.length} instructions)`);
-  process.stdout.write(`\n${numParams}${varargFlag} params, ${proto.maxStackSize} slots, ${upvalues.length} upvalues, `);
+  process.stdout.write(`\n${numParams}${varargFlag} params, ${proto.maxStackSize} slots, ${upvals.length} upvals, `);
   process.stdout.write(`${locVars.length} locals, ${constants.length} constants, ${protos.length} functions\n`);
 
   code.forEach((ins, i) => {
@@ -79,8 +79,8 @@ const listProto = (proto) => {
     process.stdout.write(`\t${i}\t${locVar.varName}\t${locVar.startPC + 1}\t${locVar.endPC + 1}\n`);
   });
 
-  process.stdout.write(`upvalues (${upvalues.length}):\n`);
-  upvalues.forEach((upvalue, i) => {
+  process.stdout.write(`upvals (${upvals.length}):\n`);
+  upvals.forEach((upvalue, i) => {
     const upvalueName = upvalueNames.length ? upvalueNames[i] : '-';
     process.stdout.write(`\t${i}\t${upvalueName}\t${upvalue.inStack}\t${upvalue.index}\n`);
   });
