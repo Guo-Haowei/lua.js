@@ -88,7 +88,7 @@ const listProto = (proto) => {
   protos.forEach((ele) => listProto(ele));
 };
 
-const print = (ls) => {
+const printImpl = (ls) => {
   const nArgs = ls.getTop();
   let output = '';
   for (let i = 1; i <= nArgs; i += 1) {
@@ -107,12 +107,16 @@ const print = (ls) => {
     }
   }
 
-  console.log(output);
+  return output;
 };
 
-const luaMain = (chunk, fileName) => {
+const print = (ls) => {
+  console.log(printImpl(ls));
+};
+
+const luaMain = (chunk, fileName, myPrint) => {
   const ls = new LuaState();
-  ls.register('print', print);
+  ls.register('print', myPrint || print);
   ls.load(chunk, fileName, 'b');
   ls.call(0, 0);
   return ls;
@@ -121,4 +125,5 @@ const luaMain = (chunk, fileName) => {
 export {
   luaMain,
   listProto,
+  printImpl, // for testing
 };

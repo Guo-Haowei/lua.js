@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { describe, it } from 'mocha';
 import { readFileSync } from 'fs';
-import { luaMain } from '../src/luac.js';
+import { luaMain, printImpl } from '../src/luac.js';
 
 describe('luac.js', () => {
   [
@@ -19,7 +19,7 @@ describe('luac.js', () => {
     },
   ].forEach((ele) => {
     const { fileName, expect } = ele;
-    describe(`execute ${fileName}.luac`, () => {
+    describe(`test ${fileName}.luac`, () => {
       const chunk = readFileSync(`lua/${fileName}.luac`);
       const ls = luaMain(chunk, fileName);
 
@@ -31,6 +31,41 @@ describe('luac.js', () => {
             assert.equal(slots[i], expect[i]);
           }
         }
+      });
+    });
+  });
+
+  [
+    {
+      fileName: 'func',
+      expect: [128, 128, 4, 128, 1, 128, 4],
+    },
+    {
+      fileName: 'upval',
+      expect: [1, 2, 1, 3, 2],
+    },
+    {
+      fileName: 'fib',
+      expect: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34],
+    },
+  ].forEach((ele) => {
+    const { fileName, expect } = ele;
+    describe(`test ${fileName}.luac`, () => {
+      const chunk = readFileSync(`lua/${fileName}.luac`);
+      let myStdout = '';
+      const myPrint = (ls) => {
+        myStdout += `${printImpl(ls)}\n`;
+      };
+
+      luaMain(chunk, fileName, myPrint);
+
+      it(`${fileName} should has expected output ${expect}`, () => {
+        let actual = myStdout.replaceAll('\t', ' ');
+        actual = actual.replaceAll('\n', ' ');
+        actual = actual.split(' ');
+        actual = actual.filter((e) => e !== '');
+        actual = actual.map((e) => Number.parseInt(e, 10));
+        assert.deepEqual(actual, expect);
       });
     });
   });
