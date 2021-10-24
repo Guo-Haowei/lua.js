@@ -4,6 +4,12 @@ const isNewLine = (char) => char === '\r' || char === '\n';
 
 const isWhiteSpace = (char) => '\t\n\v\f\r '.includes(char);
 
+const isLetter = (char) => char.length === 1 && char.match(/[A-Za-z]/i);
+
+const isDigit = (char) => char.length === 1 && char.match(/[0-9]/i);
+
+const isLetterOrDigit = (char) => char.length === 1 && char.match(/[A-Za-z0-9]/i);
+
 class Lexer {
   constructor(chunk, chunkName) {
     this.chunk = chunk;
@@ -28,12 +34,37 @@ class Lexer {
     }
 
     const c = this.chunk[0];
+
+    if (isDigit(c)) {
+      throw new Error('TODO: number');
+    }
+
+    if (isLetter(c)) {
+      return this.parseIdentifier();
+    }
+
     if (';,()[]{}+-*^%&|#:/~=<>'.includes(c)) {
       this.next(1);
       return [this.line, strToToken(c), c];
     }
 
     throw new Error(`Unexpected character ${this.chunk[0]} at line ${this.line}`);
+  }
+
+  parseIdentifier() {
+    let len = 0;
+    for (;;) {
+      const c = this.chunk[len];
+      if (!isLetterOrDigit(c)) {
+        break;
+      }
+
+      len += 1;
+    }
+
+    const id = this.chunk.slice(0, len);
+    this.next(len);
+    return [this.line, TOKEN.IDENTIFIER, id];
   }
 
   test(str) {
