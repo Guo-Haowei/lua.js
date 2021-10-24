@@ -67,7 +67,6 @@ TOKEN.OP_UNM = TOKEN.OP_MINUS;
 TOKEN.OP_SUB = TOKEN.OP_MINUS;
 TOKEN.OP_BNOT = TOKEN.OP_WAVE;
 TOKEN.OP_BXOR = TOKEN.OP_WAVE;
-
 Object.freeze(TOKEN);
 
 const KEYWORDS = {
@@ -94,7 +93,52 @@ const KEYWORDS = {
   until: TOKEN.KW_UNTIL,
   while: TOKEN.KW_WHILE,
 };
-
 Object.freeze(KEYWORDS);
 
-export { TOKEN, KEYWORDS };
+const tokenTypeMap = {
+  ';': TOKEN.SEP_SEMI,
+  ',': TOKEN.SEP_COMMA,
+  '(': TOKEN.SEP_LPAREN,
+  ')': TOKEN.SEP_RPAREN,
+  '[': TOKEN.SEP_LBRACK,
+  ']': TOKEN.SEP_RBRACK,
+  '{': TOKEN.SEP_LCURLY,
+  '}': TOKEN.SEP_RCURLY,
+  '+': TOKEN.OP_ADD,
+  '-': TOKEN.OP_MINUS,
+  '*': TOKEN.OP_MUL,
+  '^': TOKEN.OP_POW,
+  '%': TOKEN.OP_MOD,
+  '&': TOKEN.OP_BAND,
+  '|': TOKEN.OP_BOR,
+  '#': TOKEN.OP_LEN,
+  '::': TOKEN.SEP_LABEL,
+  ':': TOKEN.SEP_COLON,
+  '//': TOKEN.OP_IDIV,
+  '/': TOKEN.OP_DIV,
+  '~=': TOKEN.OP_NE,
+  '~': TOKEN.OP_WAVE,
+  '==': TOKEN.OP_EQ,
+  '=': TOKEN.OP_ASSIGN,
+  '<<': TOKEN.OP_SHL,
+  '<=': TOKEN.OP_LE,
+  '<': TOKEN.OP_LT,
+  '>>': TOKEN.OP_SHR,
+  '>=': TOKEN.OP_GE,
+  '>': TOKEN.OP_GT,
+  '...': TOKEN.VARARG,
+  '..': TOKEN.OP_CONCAT,
+  '.': TOKEN.SEP_DOT,
+};
+Object.freeze(KEYWORDS);
+
+const strToToken = (str) => {
+  const token = tokenTypeMap[str];
+  if (!token) {
+    throw new Error(`Token '${str}' not found`);
+  }
+
+  return token;
+};
+
+export { TOKEN, KEYWORDS, strToToken };

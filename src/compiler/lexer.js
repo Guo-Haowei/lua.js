@@ -1,4 +1,4 @@
-import { TOKEN } from './tokens.js';
+import { TOKEN, strToToken } from './tokens.js';
 
 const isNewLine = (char) => char === '\r' || char === '\n';
 
@@ -18,17 +18,33 @@ class Lexer {
       return [this.line, TOKEN.EOF, 'EOF'];
     }
 
-    switch (this.chunk[0]) {
-      case ';': this.next(1); return [this.line, TOKEN.SEP_SEMI, ''];
-      default: throw new Error(`Unexpected character ${this.chunk[0]} at line ${this.line}`);
+    const puncts = ['::', '//', '~=', '==', '<<', '<=', '>>', '>=', '...', '..'];
+    for (let i = 0; i < puncts.length; i += 1) {
+      const punct = puncts[i];
+      if (this.test(punct)) {
+        this.next(punct.length);
+        return [this.line, strToToken(punct), punct];
+      }
     }
+
+    const c = this.chunk[0];
+    if (';,()[]{}+-*^%&|#:/~=<>'.includes(c)) {
+      this.next(1);
+      return [this.line, strToToken(c), c];
+    }
+
+    throw new Error(`Unexpected character ${this.chunk[0]} at line ${this.line}`);
+  }
+
+  test(str) {
+    return this.chunk.startsWith(str);
   }
 
   skipWhiteSpaces() {
     while (this.chunk.length > 0) {
-      if (this.chunk.startsWith('--')) {
+      if (this.test('--')) {
         this.skipComment();
-      } else if (this.chunk.startsWith('\r\n') || this.chunk.startsWith('\n\r')) {
+      } else if (this.test('\r\n') || this.test('\n\r')) {
         this.next(2);
         this.line += 1;
       } else if (isNewLine(this.chunk[0])) {
