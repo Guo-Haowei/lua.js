@@ -35,6 +35,10 @@ class Lexer {
 
     const c = this.chunk[0];
 
+    if (c === '"') {
+      return this.parseString();
+    }
+
     if (isDigit(c)) {
       throw new Error('TODO: number');
     }
@@ -65,6 +69,24 @@ class Lexer {
     const id = this.chunk.slice(0, len);
     this.next(len);
     return [this.line, TOKEN.IDENTIFIER, id];
+  }
+
+  parseString() {
+    let len = 1;
+    for (;;) {
+      const c = this.chunk[len];
+      if (c === '\\') {
+        throw new Error('TODO: implement escape');
+      }
+      len += 1;
+
+      if (c === '"') {
+        break;
+      }
+    }
+    const raw = this.chunk.slice(0, len);
+    this.next(len);
+    return [this.line, TOKEN.STRING, raw];
   }
 
   test(str) {
