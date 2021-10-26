@@ -5,9 +5,12 @@ import Lexer from '../src/compiler/lexer.js';
 
 describe('lexer.js', () => {
   describe('Parsing chunk', () => {
-    const chunk = ' +- ///\r\n  ;\tabcde"fghij"-- abcdefg \n\r;';
+    const chunk = ' 0xF2A3,1234 +- ///\r\n  ;\tabcde"fghij"-- abcdefg \n\r;';
     const lexer = new Lexer(chunk);
     [
+      { line: 1, token: TOKEN.NUMBER, raw: '0xF2A3' },
+      { line: 1, token: TOKEN.SEP_COMMA, raw: ',' },
+      { line: 1, token: TOKEN.NUMBER, raw: '1234' },
       { line: 1, token: TOKEN.OP_ADD, raw: '+' },
       { line: 1, token: TOKEN.OP_MINUS, raw: '-' },
       { line: 1, token: TOKEN.OP_IDIV, raw: '//' },

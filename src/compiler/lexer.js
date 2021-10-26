@@ -8,6 +8,8 @@ const isLetter = (char) => char.length === 1 && char.match(/[A-Za-z]/i);
 
 const isDigit = (char) => char.length === 1 && char.match(/[0-9]/i);
 
+const isHex = (char) => char.length === 1 && char.match(/[0-9A-Fa-f]/i);
+
 const isLetterOrDigit = (char) => char.length === 1 && char.match(/[A-Za-z0-9]/i);
 
 class Lexer {
@@ -40,7 +42,7 @@ class Lexer {
     }
 
     if (isDigit(c)) {
-      throw new Error('TODO: number');
+      return this.parseNumber();
     }
 
     if (isLetter(c)) {
@@ -69,6 +71,35 @@ class Lexer {
     const id = this.chunk.slice(0, len);
     this.next(len);
     return [this.line, TOKEN.IDENTIFIER, id];
+  }
+
+  parseNumber() {
+    let len = 0;
+    if (this.test('0x')) {
+      len += 2;
+      for (;;) {
+        const c = this.chunk[len];
+        if (!isHex(c)) {
+          break;
+        }
+        len += 1;
+      }
+      if (len === 2) {
+        throw new Error(`invalid number 0x on line ${this.line}`);
+      }
+    } else {
+      for (;;) {
+        const c = this.chunk[len];
+        if (!isDigit(c)) {
+          break;
+        }
+        len += 1;
+      }
+    }
+
+    const num = this.chunk.slice(0, len);
+    this.next(len);
+    return [this.line, TOKEN.NUMBER, num];
   }
 
   parseString() {
