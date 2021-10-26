@@ -1,4 +1,4 @@
-import { TOKEN, strToToken } from './tokens.js';
+import { TOKEN, strToToken, KEYWORDS } from './tokens.js';
 
 const isNewLine = (char) => char === '\r' || char === '\n';
 
@@ -70,7 +70,9 @@ class Lexer {
 
     const id = this.chunk.slice(0, len);
     this.next(len);
-    return [this.line, TOKEN.IDENTIFIER, id];
+
+    const type = (id in KEYWORDS) ? KEYWORDS[id] : TOKEN.IDENTIFIER;
+    return [this.line, type, id];
   }
 
   parseNumber() {
