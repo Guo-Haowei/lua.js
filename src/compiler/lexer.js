@@ -19,6 +19,57 @@ class Lexer {
     this.line = 1;
   }
 
+  lex() {
+    const tokenList = [];
+    for (;;) {
+      const [line, token, raw] = this.nextToken();
+      tokenList.push({ line, token, raw });
+      if (token === TOKEN.EOF) {
+        break;
+      }
+    }
+    this.tokenList = tokenList;
+  }
+
+  checkIfPeekable() {
+    const { tokenList } = this;
+    if (tokenList === undefined) {
+      throw new Error('call lex() first');
+    }
+
+    if (tokenList.length === 0) {
+      throw new Error('unexpected EOF');
+    }
+  }
+
+  peek() {
+    this.checkIfPeekable();
+    const token = this.tokenList[0];
+    this.lastLine = token.line;
+    return token;
+  }
+
+  peekKind() {
+    return this.peek()[1];
+  }
+
+  expect(kind) {
+    const [line, token, raw] = this.nextToken();
+    if (token !== kind) {
+      throw new Error(`expect kind ${kind} on line ${line}, got '${raw}'`);
+    }
+  }
+
+  next() {
+    const token = this.peek();
+    this.tokenList = this.tokenList.slice(1);
+    return token;
+  }
+
+  currentLine() {
+    return this.lastLine;
+  }
+
   nextToken() {
     this.skipWhiteSpaces();
 
@@ -30,7 +81,7 @@ class Lexer {
     for (let i = 0; i < puncts.length; i += 1) {
       const punct = puncts[i];
       if (this.test(punct)) {
-        this.next(punct.length);
+        this.advance(punct.length);
         return [this.line, strToToken(punct), punct];
       }
     }
@@ -50,7 +101,7 @@ class Lexer {
     }
 
     if (';,()[]{}+-*^%&|#:/~=<>'.includes(c)) {
-      this.next(1);
+      this.advance(1);
       return [this.line, strToToken(c), c];
     }
 
@@ -69,7 +120,7 @@ class Lexer {
     }
 
     const id = this.chunk.slice(0, len);
-    this.next(len);
+    this.advance(len);
 
     const type = (id in KEYWORDS) ? KEYWORDS[id] : TOKEN.IDENTIFIER;
     return [this.line, type, id];
@@ -100,7 +151,7 @@ class Lexer {
     }
 
     const num = this.chunk.slice(0, len);
-    this.next(len);
+    this.advance(len);
     return [this.line, TOKEN.NUMBER, num];
   }
 
@@ -118,7 +169,7 @@ class Lexer {
       }
     }
     const raw = this.chunk.slice(0, len);
-    this.next(len);
+    this.advance(len);
     return [this.line, TOKEN.STRING, raw];
   }
 
@@ -131,25 +182,25 @@ class Lexer {
       if (this.test('--')) {
         this.skipComment();
       } else if (this.test('\r\n') || this.test('\n\r')) {
-        this.next(2);
+        this.advance(2);
         this.line += 1;
       } else if (isNewLine(this.chunk[0])) {
-        this.next(1);
+        this.advance(1);
         this.line += 1;
       } else if (isWhiteSpace(this.chunk[0])) {
-        this.next(1);
+        this.advance(1);
       } else {
         break;
       }
     }
   }
 
-  next(n) {
+  advance(n) {
     this.chunk = this.chunk.slice(n || 1);
   }
 
   skipComment() {
-    this.next(2);
+    this.advance(2);
     // long comment
     if (this.chunk[0] === '[') {
       throw new Error('TODO: implement long comment');
@@ -157,7 +208,7 @@ class Lexer {
 
     // short comment
     while (this.chunk.length > 0 && !isNewLine(this.chunk[0])) {
-      this.next(1);
+      this.advance(1);
     }
   }
 }
