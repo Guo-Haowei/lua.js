@@ -50,11 +50,11 @@ class Lexer {
   }
 
   peekKind() {
-    return this.peek()[1];
+    return this.peek().token;
   }
 
   expect(kind) {
-    const [line, token, raw] = this.nextToken();
+    const { line, token, raw } = this.next();
     if (token !== kind) {
       throw new Error(`expect kind ${kind} on line ${line}, got '${raw}'`);
     }

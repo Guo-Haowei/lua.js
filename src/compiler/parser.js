@@ -61,6 +61,11 @@ const parseRetExps = (lexer) => {
 // TODO: add statements
 
 // statements
+const parseEmptyStat = (lexer) => {
+  lexer.expect(TOKEN.SEP_SEMI);
+  return {};
+};
+
 const finishVarList = (lexer, var0) => {
   // TODO: assert var0
   const vars = [var0];
@@ -94,7 +99,7 @@ const parseAssignOrFuncCallStat = (lexer) => {
 const parseStat = (lexer) => {
   const kind = lexer.peekKind();
   switch (kind) {
-    // case TOKEN.SEP_SEMI: return parseEmptyStat(lexer);
+    case TOKEN.SEP_SEMI: return parseEmptyStat(lexer);
     default: return parseAssignOrFuncCallStat(lexer);
   }
 };
@@ -113,6 +118,7 @@ const parseStats = (lexer) => {
 const parse = (lexer) => parseStat(lexer);
 
 export {
+  parseEmptyStat,
   parseStat,
   parseStats,
   parse,
