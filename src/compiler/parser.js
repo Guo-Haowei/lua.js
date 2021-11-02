@@ -1,8 +1,5 @@
-import { TOKEN, strToToken, KEYWORDS } from './tokens.js';
-
-const TODO = () => {
-  throw new Error('TODO');
-};
+import { TOKEN } from './tokens.js';
+import * as ast from './node.js';
 
 const BLOCKEND_TOKENS = [
   TOKEN.KW_RETURN,
@@ -14,18 +11,93 @@ const BLOCKEND_TOKENS = [
 ];
 
 // epxressions
-const parsePrefixExp = (lexer) => {
-  TODO();
+// expr0 ::= nil | false | true | Numeral | LiteralString |
+//           '...' | functiondef | prefixExpr | tableConstructor
+const parseExpr0 = (lexer) => {
+  const kind = lexer.peekKind();
+  switch (kind) {
+    case TOKEN.STRING:
+    {
+      const { line, raw } = lexer.next();
+      return new ast.StringExpr(line, raw);
+    }
+    default:
+      throw new Error(`TODO: implement ${kind}`);
+  }
 };
 
-const parseExpr = (lexer) => {
-  TODO();
+const parseExpr = (lexer) => parseExpr0(lexer);
+
+const parseNameExpr = (lexer) => {
+  if (lexer.peekKind() !== TOKEN.SEP_COLON) {
+    return null;
+  }
+
+  lexer.next();
+  const { line, raw } = lexer.next();
+  return new ast.StringExpr(line, raw);
+};
+
+const parseArgs = (lexer) => {
+  let args = [];
+  switch (lexer.peekKind()) {
+    case TOKEN.SEP_LPAREN:
+      lexer.next();
+      if (lexer.peekKind() !== TOKEN.SEP_RPAREN) {
+        // eslint-disable-next-line no-use-before-define
+        args = parseExprList(lexer);
+      }
+      lexer.expect(TOKEN.SEP_RPAREN);
+      break;
+    default:
+      throw new Error('TODO: implement');
+  }
+  return args;
+};
+
+const finishFuncCallExpr = (lexer, prefixExpr) => {
+  const nameExpr = parseNameExpr(lexer);
+  const line = lexer.currentLine();
+  const args = parseArgs(lexer);
+  const lastLine = lexer.currentLine();
+  return new ast.FuncCallExpr(line, lastLine, prefixExpr, nameExpr, args);
+};
+
+const finishPrefixExpr = (lexer, expr) => {
+  let ret = expr;
+  for (;;) {
+    switch (lexer.peekKind()) {
+      case TOKEN.SEP_LBRACK:
+      case TOKEN.SEP_DOT:
+        throw new Error('TODO: table access expr');
+      case TOKEN.SEP_COLON:
+      case TOKEN.SEP_LPAREN:
+      case TOKEN.SEP_LCURLY:
+      case TOKEN.STRING:
+        ret = finishFuncCallExpr(lexer, ret);
+        break;
+      default:
+        return ret;
+    }
+  }
+};
+
+const parsePrefixExp = (lexer) => {
+  let expr = null;
+  if (lexer.peekKind(TOKEN.IDENTIFIER)) {
+    const { line, raw } = lexer.next();
+    expr = new ast.NameExpr(line, raw);
+  } else {
+    throw new Error('TODO: parseParensExpr()');
+  }
+
+  return finishPrefixExpr(lexer, expr);
 };
 
 const parseExprList = (lexer) => {
   const exprs = [];
   exprs.push(parseExpr(lexer));
-  while (lexer.peekKind() !== TOKEN.SEP_COMMA) {
+  while (lexer.peekKind() === TOKEN.SEP_COMMA) {
     lexer.next();
     exprs.push(parseExpr(lexer));
   }
@@ -87,9 +159,9 @@ const parseAssignStat = (lexer, var0) => {
 };
 
 const parseAssignOrFuncCallStat = (lexer) => {
-  // TODO
   const prefixExpr = parsePrefixExp(lexer);
-  if (prefixExpr) {
+
+  if (prefixExpr instanceof ast.FuncCallExpr) {
     return prefixExpr;
   }
 
@@ -118,8 +190,10 @@ const parseStats = (lexer) => {
 const parse = (lexer) => parseStat(lexer);
 
 export {
+  parseRetExps,
   parseEmptyStat,
   parseStat,
   parseStats,
+  parseAssignOrFuncCallStat,
   parse,
 };

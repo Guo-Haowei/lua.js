@@ -60,8 +60,8 @@ describe('luac.js', () => {
       luaMain(chunk, fileName, myPrint);
 
       it(`${fileName} should has expected output ${expect}`, () => {
-        let actual = myStdout.replaceAll('\t', ' ');
-        actual = actual.replaceAll('\n', ' ');
+        let actual = myStdout.replace(/\t/g, ' ');
+        actual = actual.replace(/\n/g, ' ');
         actual = actual.split(' ');
         actual = actual.filter((e) => e !== '');
         actual = actual.map((e) => Number.parseInt(e, 10));
