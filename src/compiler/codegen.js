@@ -1,5 +1,8 @@
+import { MAXARG_SBX } from '../misc.js';
+
+/* eslint-disable no-bitwise */
 export default class FuncInfo {
-  constructor() {
+  constructor(parent, funcDefExpr) {
     this.constants = [];
     this.usedRegs = 0;
     this.maxRegs = 0;
@@ -7,9 +10,12 @@ export default class FuncInfo {
     this.locVars = [];
     this.locNames = {};
     this.breaks = [];
-    this.parent = null;
+    this.parent = parent;
     this.upvalues = {};
-    this.instructions = [];
+    this.insts = [];
+    this.subFuncs = [];
+    this.isVararg = funcDefExpr.isVararg;
+    this.numParams = funcDefExpr.paramList.length;
   }
 
   indexOfConstant(k) {
@@ -171,5 +177,37 @@ export default class FuncInfo {
     }
 
     return -1;
+  }
+
+  emitABC(op, a, b, c) {
+    const i = (b << 23) | (c << 14) | (a << 6) | op;
+    this.insts.push(i);
+  }
+
+  emitABx(op, a, bx) {
+    const i = (bx << 14) | (a << 6) | op;
+    this.insts.push(i);
+  }
+
+  emitAsBx(op, a, b) {
+    const i = ((b + MAXARG_SBX) << 14) | (a << 6) | op;
+    this.insts.push(i);
+  }
+
+  emitAx(op, ax) {
+    const i = (ax << 6) | op;
+    this.insts.push(i);
+  }
+
+  pc() {
+    return this.insts.length - 1;
+  }
+
+  fixSbx(pc, sBx) {
+    const { insts } = this;
+    let i = insts[pc];
+    i = (i << 18) >> 18;
+    i |= (sBx + MAXARG_SBX) << 14;
+    insts[pc] = i;
   }
 }
