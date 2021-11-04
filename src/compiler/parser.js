@@ -16,7 +16,7 @@ const BLOCKEND_TOKENS = [
 const parseExpr0 = (lexer) => {
   const kind = lexer.peekKind();
   switch (kind) {
-    case TOKEN.STRING:
+    case 'STRING':
     {
       const { line, raw } = lexer.next();
       return new ast.StringExpr(line, raw);
@@ -29,7 +29,7 @@ const parseExpr0 = (lexer) => {
 const parseExpr = (lexer) => parseExpr0(lexer);
 
 const parseNameExpr = (lexer) => {
-  if (lexer.peekKind() !== TOKEN.SEP_COLON) {
+  if (lexer.peekKind() !== ':') {
     return null;
   }
 
@@ -41,13 +41,13 @@ const parseNameExpr = (lexer) => {
 const parseArgs = (lexer) => {
   let args = [];
   switch (lexer.peekKind()) {
-    case TOKEN.SEP_LPAREN:
+    case '(':
       lexer.next();
-      if (lexer.peekKind() !== TOKEN.SEP_RPAREN) {
+      if (lexer.peekKind() !== ')') {
         // eslint-disable-next-line no-use-before-define
         args = parseExprList(lexer);
       }
-      lexer.expect(TOKEN.SEP_RPAREN);
+      lexer.expect(')');
       break;
     default:
       throw new Error('TODO: implement');
@@ -67,13 +67,13 @@ const finishPrefixExpr = (lexer, expr) => {
   let ret = expr;
   for (;;) {
     switch (lexer.peekKind()) {
-      case TOKEN.SEP_LBRACK:
-      case TOKEN.SEP_DOT:
+      case '[':
+      case '.':
         throw new Error('TODO: table access expr');
-      case TOKEN.SEP_COLON:
-      case TOKEN.SEP_LPAREN:
-      case TOKEN.SEP_LCURLY:
-      case TOKEN.STRING:
+      case ':':
+      case '(':
+      case '{':
+      case 'STRING':
         ret = finishFuncCallExpr(lexer, ret);
         break;
       default:
@@ -97,7 +97,7 @@ const parsePrefixExp = (lexer) => {
 const parseExprList = (lexer) => {
   const exprs = [];
   exprs.push(parseExpr(lexer));
-  while (lexer.peekKind() === TOKEN.SEP_COMMA) {
+  while (lexer.peekKind() === ',') {
     lexer.next();
     exprs.push(parseExpr(lexer));
   }
@@ -106,7 +106,7 @@ const parseExprList = (lexer) => {
 };
 
 const parseRetExps = (lexer) => {
-  if (lexer.peekKind() !== TOKEN.KW_RETURN) {
+  if (lexer.peekKind() !== 'return') {
     throw new Error('expect keyword "return"');
   }
 
@@ -117,13 +117,13 @@ const parseRetExps = (lexer) => {
     return [];
   }
 
-  if (kind === TOKEN.SEP_SEMI) {
+  if (kind === ';') {
     lexer.next();
     return [];
   }
 
   const exprs = parseExprList(lexer);
-  if (lexer.peekKind() === TOKEN.SEP_SEMI) {
+  if (lexer.peekKind() === ';') {
     lexer.next();
   }
 
@@ -132,8 +132,8 @@ const parseRetExps = (lexer) => {
 
 const parseParamList = (lexer) => {
   switch (lexer.peekKind()) {
-    case TOKEN.SEP_RPAREN: return [[], false];
-    case TOKEN.VARARG: lexer.next(); return [[], true];
+    case ')': return [[], false];
+    case '...': lexer.next(); return [[], true];
     default: break;
   }
 
@@ -142,13 +142,13 @@ const parseParamList = (lexer) => {
 
   let { raw } = lexer.expect(TOKEN.IDENTIFIER);
   names.push(raw);
-  while (lexer.peekKind() === TOKEN.SEP_COMMA) {
+  while (lexer.peekKind() === ',') {
     lexer.next();
     if (lexer.peekKind() === TOKEN.IDENTIFIER) {
       raw = lexer.next().raw;
       names.push(raw);
     } else {
-      lexer.expect(TOKEN.VARARG);
+      lexer.expect('...');
       isVararg = true;
       break;
     }
@@ -162,11 +162,11 @@ const parseBlock = (lexer) => undefined;
 
 const parseFuncDefExpr = (lexer) => {
   const line = lexer.currentLine();
-  lexer.expect(TOKEN.SEP_LPAREN);
+  lexer.expect('(');
   const [paramList, isVararg] = parseParamList(lexer);
-  lexer.expect(TOKEN.SEP_RPAREN);
+  lexer.expect(')');
   const block = parseBlock(lexer);
-  const next = lexer.expect(TOKEN.KW_END);
+  const next = lexer.expect('end');
   const lastLine = next.line;
   return new ast.FuncDefExpr(line, lastLine, paramList, isVararg, block);
 };
@@ -175,14 +175,14 @@ const parseFuncDefExpr = (lexer) => {
 
 // statements
 const parseEmptyStat = (lexer) => {
-  lexer.expect(TOKEN.SEP_SEMI);
+  lexer.expect(';');
   return {};
 };
 
 const finishVarList = (lexer, var0) => {
   // TODO: assert var0
   const vars = [var0];
-  while (lexer.peekKind() === TOKEN.SEP_COMMA) {
+  while (lexer.peekKind() === ',') {
     lexer.next();
     const expr = parsePrefixExp(lexer);
     vars.push(expr);
@@ -193,7 +193,7 @@ const finishVarList = (lexer, var0) => {
 
 const parseAssignStat = (lexer, var0) => {
   const varList = finishVarList(lexer, var0);
-  lexer.expect(TOKEN.OP_ASSIGN);
+  lexer.expect('=');
   const exprList = parseExprList(lexer);
   const lastLine = lexer.currentLine();
   return { varList, exprList, lastLine };
@@ -212,7 +212,7 @@ const parseAssignOrFuncCallStat = (lexer) => {
 const parseStat = (lexer) => {
   const kind = lexer.peekKind();
   switch (kind) {
-    case TOKEN.SEP_SEMI: return parseEmptyStat(lexer);
+    case ';': return parseEmptyStat(lexer);
     default: return parseAssignOrFuncCallStat(lexer);
   }
 };

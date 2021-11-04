@@ -1,4 +1,4 @@
-import { TOKEN, strToToken, KEYWORDS } from './tokens.js';
+import { isKeyword } from './tokens.js';
 
 const isNewLine = (char) => char === '\r' || char === '\n';
 
@@ -24,7 +24,7 @@ class Lexer {
     for (;;) {
       const [line, token, raw] = this.nextToken();
       tokenList.push({ line, token, raw });
-      if (token === TOKEN.EOF) {
+      if (token === 'EOF') {
         break;
       }
     }
@@ -57,7 +57,7 @@ class Lexer {
     const next = this.next();
     const { line, token, raw } = next;
     if (token !== kind) {
-      throw new Error(`expect kind ${kind} on line ${line}, got '${raw}'`);
+      throw new Error(`expect kind <${kind}> on line ${line}, got <${raw}>`);
     }
     return next;
   }
@@ -76,7 +76,7 @@ class Lexer {
     this.skipWhiteSpaces();
 
     if (this.chunk.length === 0) {
-      return [this.line, TOKEN.EOF, 'EOF'];
+      return [this.line, 'EOF', 'EOF'];
     }
 
     const puncts = ['::', '//', '~=', '==', '<<', '<=', '>>', '>=', '...', '..'];
@@ -84,7 +84,7 @@ class Lexer {
       const punct = puncts[i];
       if (this.test(punct)) {
         this.advance(punct.length);
-        return [this.line, strToToken(punct), punct];
+        return [this.line, punct, punct];
       }
     }
 
@@ -104,7 +104,7 @@ class Lexer {
 
     if (';,()[]{}+-*^%&|#:/~=<>'.includes(c)) {
       this.advance(1);
-      return [this.line, strToToken(c), c];
+      return [this.line, c, c];
     }
 
     throw new Error(`Unexpected character ${this.chunk[0]} at line ${this.line}`);
@@ -127,8 +127,8 @@ class Lexer {
     const id = this.chunk.slice(0, len);
     this.advance(len);
 
-    const type = (id in KEYWORDS) ? KEYWORDS[id] : TOKEN.IDENTIFIER;
-    return [this.line, type, id];
+    const token = isKeyword(id) ? id : 'IDENT';
+    return [this.line, token, id];
   }
 
   parseNumber() {
@@ -157,7 +157,7 @@ class Lexer {
 
     const num = this.chunk.slice(0, len);
     this.advance(len);
-    return [this.line, TOKEN.NUMBER, num];
+    return [this.line, 'NUMBER', num];
   }
 
   parseString() {
@@ -175,7 +175,7 @@ class Lexer {
     }
     const raw = this.chunk.slice(0, len);
     this.advance(len);
-    return [this.line, TOKEN.STRING, raw];
+    return [this.line, 'STRING', raw];
   }
 
   test(str) {
