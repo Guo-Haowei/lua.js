@@ -130,6 +130,47 @@ const parseRetExps = (lexer) => {
   return exprs;
 };
 
+const parseParamList = (lexer) => {
+  switch (lexer.peekKind()) {
+    case TOKEN.SEP_RPAREN: return [[], false];
+    case TOKEN.VARARG: lexer.next(); return [[], true];
+    default: break;
+  }
+
+  const names = [];
+  let isVararg = false;
+
+  let { raw } = lexer.expect(TOKEN.IDENTIFIER);
+  names.push(raw);
+  while (lexer.peekKind() === TOKEN.SEP_COMMA) {
+    lexer.next();
+    if (lexer.peekKind() === TOKEN.IDENTIFIER) {
+      raw = lexer.next().raw;
+      names.push(raw);
+    } else {
+      lexer.expect(TOKEN.VARARG);
+      isVararg = true;
+      break;
+    }
+  }
+
+  return [names, isVararg];
+};
+
+// eslint-disable-next-line no-unused-vars
+const parseBlock = (lexer) => undefined;
+
+const parseFuncDefExpr = (lexer) => {
+  const line = lexer.currentLine();
+  lexer.expect(TOKEN.SEP_LPAREN);
+  const [paramList, isVararg] = parseParamList(lexer);
+  lexer.expect(TOKEN.SEP_RPAREN);
+  const block = parseBlock(lexer);
+  const next = lexer.expect(TOKEN.KW_END);
+  const lastLine = next.line;
+  return new ast.FuncDefExpr(line, lastLine, paramList, isVararg, block);
+};
+
 // TODO: add statements
 
 // statements
@@ -191,6 +232,7 @@ const parse = (lexer) => parseStat(lexer);
 
 export {
   parseRetExps,
+  parseFuncDefExpr,
   parseEmptyStat,
   parseStat,
   parseStats,

@@ -54,10 +54,12 @@ class Lexer {
   }
 
   expect(kind) {
-    const { line, token, raw } = this.next();
+    const next = this.next();
+    const { line, token, raw } = next;
     if (token !== kind) {
       throw new Error(`expect kind ${kind} on line ${line}, got '${raw}'`);
     }
+    return next;
   }
 
   next() {
@@ -111,6 +113,9 @@ class Lexer {
   parseIdentifier() {
     let len = 0;
     for (;;) {
+      if (len >= this.chunk.length) {
+        break;
+      }
       const c = this.chunk[len];
       if (!isLetterOrDigit(c)) {
         break;

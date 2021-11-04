@@ -3,6 +3,7 @@ import { describe, it } from 'mocha';
 import { TOKEN } from '../src/compiler/tokens.js';
 import Lexer from '../src/compiler/lexer.js';
 import {
+  parseFuncDefExpr,
   parseEmptyStat,
   parseAssignOrFuncCallStat,
 } from '../src/compiler/parser.js';
@@ -37,6 +38,54 @@ describe('parser.js', () => {
       assert.equal(line, 1);
       assert.deepEqual(prefixExpr, new ast.NameExpr(1, 'print'));
       assert.deepEqual(args, [new ast.StringExpr(1, '"Hello, World!"')]);
+    });
+  });
+
+  describe('parseFuncDefExpr()', () => {
+    [
+      {
+        source: 'function\n()\nend',
+        func: (node) => {
+          assert.equal(node.isVararg, false);
+          assert.equal(node.line, 1);
+          assert.equal(node.lastLine, 3);
+        },
+      },
+      {
+        source: 'function (...) end',
+        func: (node) => {
+          assert.equal(node.isVararg, true);
+          assert.equal(node.line, 1);
+          assert.equal(node.lastLine, 1);
+        },
+      },
+      {
+        source: 'function (a, b, c) end',
+        func: (node) => {
+          assert.equal(node.isVararg, false);
+          assert.deepEqual(node.paramList, ['a', 'b', 'c']);
+          assert.equal(node.line, 1);
+          assert.equal(node.lastLine, 1);
+        },
+      },
+      {
+        source: 'function (d, e, f, ...) end',
+        func: (node) => {
+          assert.equal(node.isVararg, true);
+          assert.deepEqual(node.paramList, ['d', 'e', 'f']);
+          assert.equal(node.line, 1);
+          assert.equal(node.lastLine, 1);
+        },
+      },
+    ].forEach((testCase) => {
+      const { source, func } = testCase;
+      it(`should parse '${source.replace(/\n/g, ' ')}'`, () => {
+        const lexer = setUpLexer(source);
+        lexer.expect(TOKEN.KW_FUNCTION);
+        const node = parseFuncDefExpr(lexer);
+        func(node);
+        assert.equal(lexer.peekKind(), TOKEN.EOF);
+      });
     });
   });
 });

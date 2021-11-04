@@ -28,3 +28,13 @@ export class FuncCallExpr {
     }
   }
 }
+
+export class FuncDefExpr {
+  constructor(line, lastLine, paramList, isVararg, block) {
+    this.line = line;
+    this.lastLine = lastLine;
+    this.paramList = paramList;
+    this.isVararg = isVararg;
+    this.block = block;
+  }
+}
