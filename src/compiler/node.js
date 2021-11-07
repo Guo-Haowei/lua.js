@@ -1,23 +1,26 @@
 /* eslint-disable max-classes-per-file */
-export class EmptyExpr {
+class EmptyExpr {
 }
 
-export class StringExpr {
+class NilExpr {
+}
+
+class StringExpr {
   constructor(line, raw) {
     this.line = line;
     // TODO: remove quotes
-    this.raw = raw;
+    this.string = raw;
   }
 }
 
-export class NameExpr {
+class NameExpr {
   constructor(line, raw) {
     this.line = line;
     this.raw = raw;
   }
 }
 
-export class FuncCallExpr {
+class FuncCallExpr {
   constructor(line, lastLine, prefixExpr, nameExpr, args) {
     this.line = line;
     this.lastLine = lastLine;
@@ -29,7 +32,7 @@ export class FuncCallExpr {
   }
 }
 
-export class FuncDefExpr {
+class FuncDefExpr {
   constructor(line, lastLine, paramList, isVararg, block) {
     this.line = line;
     this.lastLine = lastLine;
@@ -38,3 +41,12 @@ export class FuncDefExpr {
     this.block = block;
   }
 }
+
+export {
+  EmptyExpr,
+  NilExpr,
+  StringExpr,
+  NameExpr,
+  FuncCallExpr,
+  FuncDefExpr,
+};

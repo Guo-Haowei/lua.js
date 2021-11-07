@@ -1,5 +1,11 @@
 import { TOKEN } from './tokens.js';
-import * as ast from './node.js';
+import {
+  EmptyExpr,
+  StringExpr,
+  NameExpr,
+  FuncCallExpr,
+  FuncDefExpr,
+} from './node.js';
 
 const BLOCKEND_TOKENS = [
   TOKEN.KW_RETURN,
@@ -19,7 +25,7 @@ const parseExpr0 = (lexer) => {
     case 'STRING':
     {
       const { line, raw } = lexer.next();
-      return new ast.StringExpr(line, raw);
+      return new StringExpr(line, raw);
     }
     default:
       throw new Error(`TODO: implement ${kind}`);
@@ -35,7 +41,7 @@ const parseNameExpr = (lexer) => {
 
   lexer.next();
   const { line, raw } = lexer.next();
-  return new ast.StringExpr(line, raw);
+  return new StringExpr(line, raw);
 };
 
 const parseArgs = (lexer) => {
@@ -60,7 +66,7 @@ const finishFuncCallExpr = (lexer, prefixExpr) => {
   const line = lexer.currentLine();
   const args = parseArgs(lexer);
   const lastLine = lexer.currentLine();
-  return new ast.FuncCallExpr(line, lastLine, prefixExpr, nameExpr, args);
+  return new FuncCallExpr(line, lastLine, prefixExpr, nameExpr, args);
 };
 
 const finishPrefixExpr = (lexer, expr) => {
@@ -86,7 +92,7 @@ const parsePrefixExp = (lexer) => {
   let expr = null;
   if (lexer.peekKind(TOKEN.IDENTIFIER)) {
     const { line, raw } = lexer.next();
-    expr = new ast.NameExpr(line, raw);
+    expr = new NameExpr(line, raw);
   } else {
     throw new Error('TODO: parseParensExpr()');
   }
@@ -168,7 +174,7 @@ const parseFuncDefExpr = (lexer) => {
   const block = parseBlock(lexer);
   const next = lexer.expect('end');
   const lastLine = next.line;
-  return new ast.FuncDefExpr(line, lastLine, paramList, isVararg, block);
+  return new FuncDefExpr(line, lastLine, paramList, isVararg, block);
 };
 
 // TODO: add statements
@@ -176,7 +182,7 @@ const parseFuncDefExpr = (lexer) => {
 // statements
 const parseEmptyStat = (lexer) => {
   lexer.expect(';');
-  return {};
+  return new EmptyExpr();
 };
 
 const finishVarList = (lexer, var0) => {
@@ -202,7 +208,7 @@ const parseAssignStat = (lexer, var0) => {
 const parseAssignOrFuncCallStat = (lexer) => {
   const prefixExpr = parsePrefixExp(lexer);
 
-  if (prefixExpr instanceof ast.FuncCallExpr) {
+  if (prefixExpr instanceof FuncCallExpr) {
     return prefixExpr;
   }
 

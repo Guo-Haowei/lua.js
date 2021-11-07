@@ -1,7 +1,12 @@
 import { MAXARG_SBX } from '../misc.js';
+import {
+  NilExpr,
+  StringExpr,
+  FuncCallExpr,
+} from './node.js';
 
 /* eslint-disable no-bitwise */
-export default class FuncInfo {
+class FuncInfo {
   constructor(parent, funcDefExpr) {
     this.constants = [];
     this.usedRegs = 0;
@@ -211,3 +216,88 @@ export default class FuncInfo {
     insts[pc] = i;
   }
 }
+
+const isVarargOrFuncCall = (node) => {
+  if (node instanceof FuncCallExpr) {
+    return true;
+  }
+
+  return false;
+};
+
+const genExpr = (funcInfo, node, a, n) => {
+  if (node instanceof NilExpr) {
+    return funcInfo.emitLoadNil(a, n);
+  }
+  if (node instanceof StringExpr) {
+    return funcInfo.emitLoadK(a, node.string);
+  }
+
+  throw new Error('TODO');
+};
+
+const prepFuncCall = (funcInfo, node, a) => {
+  console.log(node);
+  console.log(a.b.c.d);
+
+  let nArgs = node.args.length;
+  let lastArgIsVarargOrFuncCall = false;
+
+  genExpr(funcInfo, node.prefixExpr, a, 1);
+  if (node.nameExpr) {
+    throw new Error('??');
+    // see page 347
+    // const c = 0x100 + funcInfo.indexOfConstant(node.nameExpr);
+  }
+
+  for (let i = 0; i < node.args.length; i += 1) {
+    const arg = node.args[i];
+    const tmp = funcInfo.allocReg();
+    if ((i === nArgs - 1) && (isVarargOrFuncCall(arg))) {
+      lastArgIsVarargOrFuncCall = true;
+      genExpr(funcInfo, arg, tmp, -1);
+    } else {
+      genExpr(funcInfo, arg, tmp, 1);
+    }
+  }
+  funcInfo.freeRegs(nArgs);
+
+  if (node.nameExpr) {
+    nArgs += 1;
+  }
+  if (lastArgIsVarargOrFuncCall) {
+    nArgs -= 1;
+  }
+
+  return nArgs;
+};
+
+const genFuncCallExpr = (funcInfo, node, a, n) => {
+  const nArgs = prepFuncCall(funcInfo, node, a);
+  funcInfo.emitCall(a, nArgs, n);
+};
+
+const genFuncCallStat = (funcInfo, node) => {
+  const r = funcInfo.allocReg();
+  genFuncCallExpr(funcInfo, node, r, 0);
+  funcInfo.freeReg();
+};
+
+const genStat = (funcInfo, node) => {
+  if (node instanceof FuncCallExpr) {
+    return genFuncCallStat(funcInfo, node);
+  }
+
+  throw new Error('TODO');
+};
+
+const genBlock = (funcInfo, node) => {
+  node.stats.forEach((stat) => {
+    genStat(stat);
+  });
+};
+
+export {
+  FuncInfo,
+  genBlock,
+};

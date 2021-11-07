@@ -7,7 +7,13 @@ import {
   parseEmptyStat,
   parseAssignOrFuncCallStat,
 } from '../src/compiler/parser.js';
-import * as ast from '../src/compiler/node.js';
+import {
+  EmptyExpr,
+  StringExpr,
+  NameExpr,
+  // FuncCallExpr,
+  // FuncDefExpr,
+} from '../src/compiler/node.js';
 
 const setUpLexer = (source) => {
   const lexer = new Lexer(source);
@@ -21,7 +27,7 @@ describe('parser.js', () => {
     it(`should parse < ${source} > empty stat`, () => {
       const lexer = setUpLexer(source);
       const node = parseEmptyStat(lexer);
-      assert.deepEqual(node, {});
+      assert.deepEqual(node, new EmptyExpr());
       assert.equal(lexer.peekKind(), TOKEN.EOF);
     });
   });
@@ -36,8 +42,8 @@ describe('parser.js', () => {
       } = node;
       assert.equal(lastLine, 1);
       assert.equal(line, 1);
-      assert.deepEqual(prefixExpr, new ast.NameExpr(1, 'print'));
-      assert.deepEqual(args, [new ast.StringExpr(1, '"Hello, World!"')]);
+      assert.deepEqual(prefixExpr, new NameExpr(1, 'print'));
+      assert.deepEqual(args, [new StringExpr(1, '"Hello, World!"')]);
     });
   });
 
